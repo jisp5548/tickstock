@@ -1,5 +1,6 @@
 import "server-only";
-import { fetchOverview, fetchSeries, type CompanyOverview } from "./alphavantage";
+import { fetchOverview, fetchSeries, UpstreamUnavailableError, type CompanyOverview } from "./alphavantage";
+import { fetchFmpProfile } from "./fmp";
 import type { PricePoint, RangeSource } from "./series";
 import { fetchNews, type NewsArticle } from "./tavily";
 
@@ -16,9 +17,21 @@ export function seriesSource(symbol: string, source: RangeSource): Source<PriceP
   return { key: `${source}/${symbol}`, maxAgeMs: 12 * HOUR, load: () => fetchSeries(symbol, source) };
 }
 
-/** Fundamentals move slowly; a week-old overview is fine and saves quota for prices. */
+/**
+ * Fundamentals move slowly; a week-old overview is fine and saves quota for prices.
+ * AlphaVantage's Company Overview comes first (the challenge asks for it, and premium keys get it).
+ * It is premium-only, so with a free key it fails and FMP's free company profile fills the same fields.
+ */
 export function overviewSource(symbol: string): Source<CompanyOverview> {
-  return { key: `overview/${symbol}`, maxAgeMs: 7 * 24 * HOUR, load: () => fetchOverview(symbol) };
+  return {
+    key: `overview/${symbol}`,
+    maxAgeMs: 7 * 24 * HOUR,
+    load: () =>
+      fetchOverview(symbol).catch((error: unknown) => {
+        if (error instanceof UpstreamUnavailableError) return fetchFmpProfile(symbol);
+        throw error;
+      }),
+  };
 }
 
 export function newsSource(symbol: string, companyName: string): Source<NewsArticle[]> {

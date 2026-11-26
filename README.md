@@ -54,8 +54,21 @@ npm run dev
 | --- | --- |
 | `ALPHAVANTAGE_API_KEY` | https://www.alphavantage.co/support/#api-key (free) |
 | `TAVILY_API_KEY` | https://app.tavily.com (free tier, used for news) |
+| `FMP_API_KEY` | https://site.financialmodelingprep.com (free tier, used for company profiles; see below) |
 
 The app also runs with **no keys at all**. It serves the snapshot committed in `data/cache/` and shows a "Cached snapshot" badge.
+
+## Why company profiles can come from Financial Modeling Prep
+
+The challenge asks for the stock page to load AlphaVantage's **Company Overview** (`OVERVIEW`). Since this challenge was written, AlphaVantage has moved that endpoint to its **premium plans**. A free key now gets "This is a premium endpoint" instead of data. Only the public `demo` key still returns it, and only for IBM.
+
+So the app tries both, in this order (`lib/sources.ts`):
+
+1. **AlphaVantage `OVERVIEW` first, every time.** The requirement is implemented as written, and with a premium key the AlphaVantage data is used as-is.
+2. **Financial Modeling Prep's free company profile when AlphaVantage refuses.** The fallback covers a premium-gate, an exhausted quota or a missing key. FMP fills the same required fields: name, asset type, description, exchange, sector, industry and market cap, plus beta and the 52-week range. FMP already supplies the logos, so no new vendor is involved.
+3. **"N/A" for anything neither provider returns,** as the requirements specify.
+
+Whenever the FMP fallback was used, the About section says so, so the source is never hidden. FMP's profile has no P/E, EPS or dividend yield, so those statistics only appear when AlphaVantage supplies them.
 
 ## Living with the free tier (25 AlphaVantage calls a day)
 

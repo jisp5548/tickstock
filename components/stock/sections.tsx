@@ -111,6 +111,11 @@ export function CompanyProfile({ symbol, overview }: { symbol: string; overview?
           </div>
         ))}
       </dl>
+      {overview?.provider === "Financial Modeling Prep" && (
+        <p className="mt-3 text-xs text-muted">
+          Profile from Financial Modeling Prep: AlphaVantage&apos;s Company Overview is a premium-only endpoint.
+        </p>
+      )}
     </section>
   );
 }

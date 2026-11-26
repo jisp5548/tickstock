@@ -31,7 +31,7 @@ export function Sidebar() {
         <Suspense fallback={<span className="skeleton inline-block h-3 w-32 rounded" />}>
           <DataFreshness />
         </Suspense>
-        <p>Market data from Alpha Vantage · News via Tavily</p>
+        <p>Prices: Alpha Vantage · News: Tavily · Logos &amp; profiles: FMP</p>
       </footer>
     </aside>
   );

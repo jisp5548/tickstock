@@ -60,6 +60,8 @@ export async function fetchSeries(symbol: string, source: RangeSource): Promise<
 
 export interface CompanyOverview {
   symbol: string;
+  /** Who supplied the profile. Older snapshot entries predate this field and are AlphaVantage's. */
+  provider?: "Alpha Vantage" | "Financial Modeling Prep";
   assetType?: string;
   name?: string;
   description?: string;
@@ -98,6 +100,7 @@ export async function fetchOverview(symbol: string): Promise<CompanyOverview> {
   if (!raw.Symbol) throw new SymbolNotFoundError(symbol);
   return {
     symbol: raw.Symbol,
+    provider: "Alpha Vantage",
     assetType: text(raw.AssetType),
     name: text(raw.Name),
     description: text(raw.Description),
