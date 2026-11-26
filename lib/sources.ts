@@ -22,5 +22,5 @@ export function overviewSource(symbol: string): Source<CompanyOverview> {
 }
 
 export function newsSource(symbol: string, companyName: string): Source<NewsArticle[]> {
-  return { key: `news/${symbol}`, maxAgeMs: 6 * HOUR, load: () => fetchNews(symbol, companyName) };
+  return { key: `news/${symbol}`, maxAgeMs: 6 * HOUR, load: () => fetchNews(companyName) };
 }

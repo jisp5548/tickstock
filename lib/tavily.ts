@@ -18,7 +18,20 @@ interface TavilyResult {
   favicon?: string;
 }
 
-export async function fetchNews(symbol: string, companyName: string): Promise<NewsArticle[]> {
+const MAX_ARTICLES = 6;
+/** Quote/profile pages ("AAPL Stock Price & Quote") and Tavily's own entity pages are not news. */
+const NOT_NEWS_TITLE = /stock price|quote|live chart/i;
+const NOT_NEWS_HOSTS = new Set(["tavily.com"]);
+
+/** Snippets arrive as page markdown; drop table pipes, heading marks and emphasis so they read as prose. */
+function toPlainText(markdown: string): string {
+  return markdown
+    .replace(/[#|*_>`]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export async function fetchNews(companyName: string): Promise<NewsArticle[]> {
   const apiKey = process.env.TAVILY_API_KEY;
   if (!apiKey) throw new UpstreamUnavailableError("TAVILY_API_KEY is not set");
 
@@ -27,22 +40,26 @@ export async function fetchNews(symbol: string, companyName: string): Promise<Ne
     cache: "no-store",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
-      query: `${companyName} (${symbol}) stock`,
+      // Plain "<company> news" returns articles; adding the ticker or "stock" pulls quote pages instead.
+      query: `${companyName} news`,
       topic: "news",
       days: 7,
-      max_results: 6,
+      max_results: MAX_ARTICLES + 4,
       include_favicon: true,
     }),
   });
   if (!response.ok) throw new UpstreamUnavailableError(`Tavily responded ${response.status}`);
 
   const { results = [] } = (await response.json()) as { results?: TavilyResult[] };
-  return results.map((result) => ({
-    title: result.title,
-    url: result.url,
-    source: new URL(result.url).hostname.replace(/^www\./, ""),
-    summary: result.content,
-    publishedAt: result.published_date,
-    favicon: result.favicon,
-  }));
+  return results
+    .map((result) => ({
+      title: result.title,
+      url: result.url,
+      source: new URL(result.url).hostname.replace(/^www\./, ""),
+      summary: toPlainText(result.content),
+      publishedAt: result.published_date,
+      favicon: result.favicon,
+    }))
+    .filter((article) => !NOT_NEWS_HOSTS.has(article.source) && !NOT_NEWS_TITLE.test(article.title))
+    .slice(0, MAX_ARTICLES);
 }

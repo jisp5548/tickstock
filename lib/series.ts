@@ -138,11 +138,15 @@ export function areaPath(plots: readonly Plot[], height: number): string {
   return `${linePath(plots)}L${last.x.toFixed(2)} ${height}L${first.x.toFixed(2)} ${height}Z`;
 }
 
-/** Round axis values (1, 2, 2.5 or 5 × 10ⁿ apart) covering roughly [min, max]. */
+/** Round axis values (1, 2, 2.5 or 5 × 10ⁿ apart) covering roughly [min, max] with about `approxCount` ticks. */
 export function niceTicks(min: number, max: number, approxCount = 4): number[] {
   const raw = (max - min) / approxCount || 1;
   const magnitude = 10 ** Math.floor(Math.log10(raw));
-  const step = ([1, 2, 2.5, 5, 10].find((multiple) => raw / magnitude <= multiple) ?? 10) * magnitude;
+  // Nearest round multiple (not the next one up), so a 21-point span gets ticks every 5 rather than every 10.
+  const multiple = [1, 2, 2.5, 5, 10].reduce((best, candidate) =>
+    Math.abs(raw / magnitude - candidate) < Math.abs(raw / magnitude - best) ? candidate : best,
+  );
+  const step = multiple * magnitude;
   const ticks: number[] = [];
   for (let tick = Math.ceil(min / step) * step; tick <= max; tick += step) ticks.push(Number(tick.toFixed(10)));
   return ticks;

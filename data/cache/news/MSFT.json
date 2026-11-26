@@ -1,0 +1,29 @@
+{
+  "data": [
+    {
+      "title": "Microsoft declares internal ‘Code Red’ after historic 24-hour outage - Reuters By Investing.com",
+      "url": "https://www.investing.com/news/stock-market-news/microsoft-declares-internal-code-red-after-historic-24hour-outage--reuters-5048793",
+      "source": "investing.com",
+      "summary": "Investing.com -- Microsoft Corporation (NASDAQ:MSFT) has initiated an internal \"Code Red\" mobilization to overhaul its engineering protocols and crisis response systems following a historic 24-hour service outage earlier this month, according to internal memos reviewed by Reuters. The urgent operational directive underscores heightened executive scrutiny over the reliability of the tech giant’s enterprise cloud infrastructure after the disruption. [...] Microsoft attributed the failure to an undetected Windows scalability defect introduced in July rather than cyber activity or autonomous AI agents. During a subsequent internal review, Executive Vice President Charles Lamanna noted that the compromised component had absorbed \"roughly ten years' worth of acceptable failures,\" highlighting the severity of the architectural strain. [...] The November 12–13 incident knocked out core workplace applications, including Exchange Online, Outlook, Teams, and the Copilot AI assistant, impacting governments and businesses across the world. In a Friday memo to staff, M365 Core President Jason Henderson described the event as the most customer-impacting incident in the history of Exchange Online, adding that the Code Red designation makes remediation the team's highest priority.",
+      "publishedAt": "Tue, 24 Nov 2026 17:15:18 GMT",
+      "favicon": "https://www.investing.com/favicon.ico"
+    },
+    {
+      "title": "Microsoft President Warns of More Tech Outages in Coming Months - Newsweek",
+      "url": "https://www.newsweek.com/microsoft-president-warns-of-more-tech-outages-in-coming-months-12754309",
+      "source": "newsweek.com",
+      "summary": "Brad Smith, vice chair and president of Microsoft Corporation, delivers a speech at the Culture Ministry on July 21, 2025, in Paris. AP Photo/Michel...Read More Related Story Image 6: Microsoft Outage Update: Company Confirms Issue Resolved Microsoft Outage Update: Company Confirms Issue Resolved Officials Urge Calm Amid Banking Glitches [...] Want the morning news straight to your inbox? Sign up - [x] Sign up to Breaking News alerts By clicking “sign up” you are agreeing to our Terms of Service and Privacy Policy \"If you get an update on your phone or your laptop with a patch, apply it because I think that's going to keep your technology far safer,\" he said. Image 5: Brad Smith, vice chair and president of Microsoft Corporation, delivers a speech at the Culture Ministry on July 21, 2025, in Paris. AP Photo/Michel Euler [...] Smith said Sunday that Microsoft's outage was neither an AI failure nor a cyberattack, describing it instead as a \"perfect storm\" triggered by a software update from four months earlier interacting with a newer update and a shift in network traffic. Microsoft has published two reports on the incident and completed nine corrective steps, with 13 more planned, he said.",
+      "publishedAt": "Sun, 22 Nov 2026 21:18:39 GMT",
+      "favicon": "https://www.newsweek.com/favicon.svg"
+    },
+    {
+      "title": "Microsoft declares Code Red after 24-hour outage hit most of its users | Fox News",
+      "url": "https://www.foxnews.com/us/microsoft-declares-code-red-historic-service-outage",
+      "source": "foxnews.com",
+      "summary": "An error message is shown when trying to access Microsoft's Outlook Nov. 12, 2026, in Chicago. Microsoft reported a widespread outage that left users unable to access Outlook, Teams and other Microsoft services. (Scott Olson/Getty Images) Fox News Digital contacted Microsoft for further comment. CLICK HERE TO DOWNLOAD THE FOX NEWS APP Reuters contributed to this report. [...] Microsoft blamed the outage on a previously undetected scalability defect within the Windows operating system. SWIFT ASSURANCES FROM OFFICIALS AFTER WAVE OF NATIONWIDE OUTAGES RAISES QUESTIONS, EXPERT SAYS \"Unfortunately, all the work we have done over the years was not sufficient to protect us on Thursday,\" Henderson wrote. [...] Microsoft employees exchanged over 11,000 messages during the crisis in an effort to diagnose the issue, Microsoft Corporate Vice President Amanda Silver told employees in a memo Monday. DHS CHIEF TELLS AMERICANS TO 'BREATHE' AMID TECH OUTAGES, INSISTS HOMELAND IS 'SECURE' Silver also detailed the nature of the \"Code Red\" rapid response, explaining that the mobilization would involve five workstreams focused on load shedding, geographic traffic partitioning and faster recovery mechanisms.",
+      "publishedAt": "Tue, 24 Nov 2026 19:47:54 GMT",
+      "favicon": "https://static.foxnews.com/static/orion/styles/img/fox-news/favicons/favicon.ico"
+    }
+  ],
+  "fetchedAt": "2026-11-26T00:58:20.927Z"
+}
