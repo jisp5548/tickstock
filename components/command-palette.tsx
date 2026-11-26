@@ -2,7 +2,7 @@
 
 import { Command } from "cmdk";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createContext, use, useEffect, useState, useTransition } from "react";
 import { searchMarkets } from "@/app/actions";
 import { isPlainShortcut } from "@/lib/keyboard";
@@ -86,6 +86,7 @@ type RemoteSearch = Awaited<ReturnType<typeof searchMarkets>> & { query: string 
 
 function CommandPalette({ onClose }: { onClose: () => void }) {
   const router = useRouter();
+  const pathname = usePathname();
   const mobile = useIsMobile();
   const [query, setQuery] = useState("");
   const [remote, setRemote] = useState<RemoteSearch>();
@@ -151,6 +152,27 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
           ))}
         </Command.Group>
 
+        {/* Actions sit above the always-present "Search all markets" row so a matching action gets Enter first. */}
+        <Command.Group heading="Actions">
+          {pathname !== "/" && (
+            <PaletteItem value="go to market overview home tiles" onSelect={() => run(() => router.push("/"))}>
+              <span className="flex-1">Go to market overview</span>
+            </PaletteItem>
+          )}
+          {advanced.available && (
+            <PaletteItem value="advanced standard view chart tradingview" onSelect={() => run(() => advanced.setActive(!advanced.active))}>
+              <span className="flex-1">Switch to {advanced.active ? "standard" : "advanced"} view</span>
+              <Kbd>V</Kbd>
+            </PaletteItem>
+          )}
+          <PaletteItem value="toggle chart fill shading area" onSelect={() => run(toggleFill)}>
+            <span className="flex-1">{fillOn ? "Hide" : "Show"} shading under charts</span>
+            <Kbd>F</Kbd>
+          </PaletteItem>
+          <PaletteItem value="show change as dollars percent" onSelect={() => run(togglePillMode)}>
+            <span className="flex-1">Show changes in {pillMode === "percent" ? "dollars" : "percent"}</span>
+          </PaletteItem>
+        </Command.Group>
         {trimmed && (
           <Command.Group heading="All markets" forceMount>
             {answered?.status === "ok" &&
@@ -171,22 +193,6 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
             {answered && <RemoteFeedback search={answered} />}
           </Command.Group>
         )}
-
-        <Command.Group heading="Actions">
-          {advanced.available && (
-            <PaletteItem value="advanced standard view chart tradingview" onSelect={() => run(() => advanced.setActive(!advanced.active))}>
-              <span className="flex-1">Switch to {advanced.active ? "standard" : "advanced"} view</span>
-              <Kbd>V</Kbd>
-            </PaletteItem>
-          )}
-          <PaletteItem value="toggle chart fill shading area" onSelect={() => run(toggleFill)}>
-            <span className="flex-1">{fillOn ? "Hide" : "Show"} shading under charts</span>
-            <Kbd>F</Kbd>
-          </PaletteItem>
-          <PaletteItem value="show change as dollars percent" onSelect={() => run(togglePillMode)}>
-            <span className="flex-1">Show changes in {pillMode === "percent" ? "dollars" : "percent"}</span>
-          </PaletteItem>
-        </Command.Group>
       </Command.List>
     </Command>
   );

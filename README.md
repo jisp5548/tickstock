@@ -4,6 +4,7 @@ A stock watchlist modelled on Apple's Stocks app, built with Next.js 16 (App Rou
 
 - **Homepage**: 15 stocks with logos, a 1-month sparkline, price and a change pill. On desktop it shows a sidebar list plus a tile grid; on phones the list is the whole homepage, as on iPhone.
 - **Stock page** (`/stock/[symbol]`): an interactive price chart (1W to ALL, with scrubbing and keyboard inspection), Apple-style statistics, news, the company profile, and the daily price history.
+- **Getting back**: click the **Tickstock** title, or choose "Go to market overview" in the palette, to return to the overview tiles. On phones, swipe the stock sheet down or tap ✕.
 - **Search**: ⌘K / Ctrl+K or `/` opens a command palette. It filters the watchlist instantly and searches every US listing when you press Enter.
 - **Shading**: the area under every line can be switched on or off with `F`, from the palette, or with the chart's toggle. The choice is remembered.
 - **Advanced view** (press `V` on any stock): a TradingView-style workspace. See below.

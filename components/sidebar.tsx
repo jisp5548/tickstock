@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { formatDate } from "@/lib/format";
 import { getSeries } from "@/lib/market";
@@ -13,7 +14,12 @@ export function Sidebar() {
       <header className="space-y-4 px-4 pt-5 pb-3">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-display text-3xl font-medium tracking-tight">Tickstock</h1>
+            <h1 className="font-display text-3xl font-medium tracking-tight">
+              {/* The title doubles as the way back to the market overview. */}
+              <Link href="/" className="rounded-md transition-opacity duration-150 hover:opacity-80">
+                Tickstock
+              </Link>
+            </h1>
             <p className="text-sm text-muted">{LIST_RANGE.label} performance</p>
           </div>
           <PillModeToggle />
