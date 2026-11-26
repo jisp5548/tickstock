@@ -103,14 +103,6 @@ Only the chart animates in size; everything else uses cheap fades and slides. On
 
 In the watchlist, the mini chart, the change and its color all cover the **same period (1 month)**, so they never contradict each other. Today's move is shown separately and labelled "Today".
 
-## Deployment
-
-The site runs on Vercel and redeploys automatically on every push to `main`. To deploy your own copy:
-
-1. Import the repo on [vercel.com/new](https://vercel.com/new).
-2. Add the three keys as environment variables.
-3. Add the same keys as GitHub Actions secrets so the daily data refresh can run.
-
 ## Project structure
 
 ```
