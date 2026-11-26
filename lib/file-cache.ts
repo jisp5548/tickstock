@@ -10,6 +10,12 @@ import type { Source } from "./sources";
 const CACHE_DIR = path.join(process.cwd(), "data", "cache");
 /** After an upstream failure, don't retry the same key for a while (each retry spends quota). */
 const RETRY_BACKOFF_MS = 15 * 60_000;
+/**
+ * On Vercel the filesystem is read-only and instances are short-lived, so a background refresh could never be
+ * saved and every cold start would re-spend the daily quota. There, the committed snapshot is refreshed by a
+ * daily GitHub Action instead (.github/workflows/snapshot.yml); missing entries still load live.
+ */
+const BACKGROUND_REFRESH = process.env.VERCEL !== "1";
 
 export interface Cached<T> {
   data: T;
@@ -71,7 +77,7 @@ export async function staleWhileRevalidate<T>(source: Source<T>): Promise<Cached
   const stored = readEntry<T>(source.key);
   if (!stored) return refresh(source);
 
-  if (isStale(stored, source.maxAgeMs) && Date.now() - (lastFailure.get(source.key) ?? 0) > RETRY_BACKOFF_MS) {
+  if (BACKGROUND_REFRESH && isStale(stored, source.maxAgeMs) && Date.now() - (lastFailure.get(source.key) ?? 0) > RETRY_BACKOFF_MS) {
     refresh(source).catch(() => {
       // Keep serving the stored entry until upstream recovers.
     });
