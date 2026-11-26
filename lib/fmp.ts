@@ -35,7 +35,7 @@ function yearRange(range: string | undefined): { week52Low?: number; week52High?
 }
 
 export async function fetchFmpProfile(symbol: string): Promise<CompanyOverview> {
-  const apiKey = process.env.FMP_API_KEY;
+  const apiKey = process.env.FMP_API_KEY?.trim();
   if (!apiKey) throw new UpstreamUnavailableError("FMP_API_KEY is not set");
 
   const url = `https://financialmodelingprep.com/stable/profile?${new URLSearchParams({ symbol, apikey: apiKey })}`;

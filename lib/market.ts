@@ -22,7 +22,10 @@ async function settle<T>(load: Promise<Cached<T>>): Promise<Loaded<T>> {
     return { status: "ok", ...entry };
   } catch (error) {
     cacheLife("minutes");
-    return { status: error instanceof SymbolNotFoundError ? "not-found" : "unavailable" };
+    if (error instanceof SymbolNotFoundError) return { status: "not-found" };
+    // Visible in server logs (e.g. Vercel). Key-like strings are masked: AlphaVantage echoes the key in its errors.
+    console.warn(`[data] upstream unavailable: ${String(error instanceof Error ? error.message : error).replace(/\b[A-Za-z0-9_-]{16,}\b/g, "***")}`);
+    return { status: "unavailable" };
   }
 }
 

@@ -41,7 +41,8 @@ function newsQuery(companyName: string): string {
 }
 
 export async function fetchNews(companyName: string): Promise<NewsArticle[]> {
-  const apiKey = process.env.TAVILY_API_KEY;
+  // Trimmed: a pasted trailing newline is invalid in an HTTP header and would make every request throw.
+  const apiKey = process.env.TAVILY_API_KEY?.trim();
   if (!apiKey) throw new UpstreamUnavailableError("TAVILY_API_KEY is not set");
 
   const response = await fetch("https://api.tavily.com/search", {

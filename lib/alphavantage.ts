@@ -18,7 +18,7 @@ function throttled<T>(task: () => Promise<T>): Promise<T> {
 }
 
 async function query(params: Record<string, string>): Promise<Record<string, unknown>> {
-  const apiKey = process.env.ALPHAVANTAGE_API_KEY;
+  const apiKey = process.env.ALPHAVANTAGE_API_KEY?.trim();
   if (!apiKey) throw new UpstreamUnavailableError("ALPHAVANTAGE_API_KEY is not set");
 
   const url = `${BASE_URL}?${new URLSearchParams({ ...params, apikey: apiKey })}`;
