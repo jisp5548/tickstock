@@ -13,6 +13,10 @@ const INSET = 14;
 /** Space kept clear above the price area for the OHLC legend. */
 const LEGEND_SPACE = 64;
 const MIN_VISIBLE_BARS = 12;
+/** How long the entrance holds the full-height line (the view-transition morph runs meanwhile), then unfolds. */
+const INTRO_HOLD_MS = 340;
+const UNFOLD_MS = 480;
+const NO_OVERLAYS: Overlay[] = [];
 const ZOOM_STEP = 1.15;
 
 export type ChartStyle = "candles" | "line";
@@ -58,14 +62,23 @@ interface CandleChartProps {
   overlays: Overlay[];
   legendTitle: string;
   dateStyle: "short" | "month" | "year";
+  /** Play the entrance: start as a full-height line, then unfold into the final layout. */
+  intro: boolean;
 }
+
+/**
+ * Entrance phases. "intro": a full-height line, shaped like the standard chart it morphs from, with axes,
+ * legend and candles hidden. "unfold": the line stretches into the price band while candles, volume and
+ * axes fade in. "settled": the line is removed.
+ */
+type Phase = "intro" | "unfold" | "settled";
 
 interface Measurement {
   start: number;
   end: number;
 }
 
-export function CandleChart({ points, window, onWindowChange, style, tool, showVolume, overlays, legendTitle, dateStyle }: CandleChartProps) {
+export function CandleChart({ points, window, onWindowChange, style, tool, showVolume, overlays, legendTitle, dateStyle, intro }: CandleChartProps) {
   const [plotRef, size] = useElementSize<HTMLDivElement>();
   const plotElement = useRef<HTMLDivElement>(null);
   const attachPlot = useCallback(
@@ -79,6 +92,13 @@ export function CandleChart({ points, window, onWindowChange, style, tool, showV
   const [measurement, setMeasurement] = useState<Measurement>();
   const drag = useRef<{ x: number; window: BarWindow }>(undefined);
   const measuring = useRef(false);
+  const [phase, setPhase] = useState<Phase>(intro ? "intro" : "settled");
+
+  useEffect(() => {
+    if (phase === "settled") return;
+    const timer = setTimeout(() => setPhase(phase === "intro" ? "unfold" : "settled"), phase === "intro" ? INTRO_HOLD_MS : UNFOLD_MS);
+    return () => clearTimeout(timer);
+  }, [phase]);
 
   const width = Math.max(size.width - PRICE_AXIS_WIDTH, 0);
   const height = Math.max(size.height - TIME_AXIS_HEIGHT, 0);
@@ -96,6 +116,13 @@ export function CandleChart({ points, window, onWindowChange, style, tool, showV
   const min = Math.min(...lows, ...visibleOverlayValues);
   const max = Math.max(...highs, ...visibleOverlayValues);
   const { toY, priceAt } = priceScale(min, max, priceHeight);
+  // Intro: map the final price band onto the full plot height (the standard chart's shape). Removing the
+  // transform during "unfold" stretches the series down into place.
+  const bandHeight = priceHeight - LEGEND_SPACE - INSET * 2;
+  const fullHeightStretch =
+    bandHeight > 0
+      ? `translate(0px, ${INSET}px) scale(1, ${(height - INSET * 2) / bandHeight}) translate(0px, ${-(LEGEND_SPACE + INSET)}px)`
+      : undefined;
 
   // Wheel zoom needs a non-passive listener to stop the page from scrolling.
   useEffect(() => {
@@ -184,7 +211,7 @@ export function CandleChart({ points, window, onWindowChange, style, tool, showV
   const measureBox = measurement && measurementGeometry(measurement);
 
   return (
-    <div className="relative size-full">
+    <div className="relative size-full" data-phase={phase}>
       <div
         ref={attachPlot}
         role="img"
@@ -208,28 +235,53 @@ export function CandleChart({ points, window, onWindowChange, style, tool, showV
             </clipPath>
           </defs>
 
-          {yTicks.map((tick) => (
-            <line key={tick} x1={0} x2={width} y1={toY(tick)} y2={toY(tick)} stroke="var(--color-rule)" strokeOpacity={0.55} />
-          ))}
-          {xTicks.map((index) => (
-            <line key={index} x1={xOf(index)} x2={xOf(index)} y1={0} y2={height} stroke="var(--color-rule)" strokeOpacity={0.35} />
-          ))}
+          <g className="chart-chrome">
+            {yTicks.map((tick) => (
+              <line key={tick} x1={0} x2={width} y1={toY(tick)} y2={toY(tick)} stroke="var(--color-rule)" strokeOpacity={0.55} />
+            ))}
+            {xTicks.map((index) => (
+              <line key={index} x1={xOf(index)} x2={xOf(index)} y1={0} y2={height} stroke="var(--color-rule)" strokeOpacity={0.35} />
+            ))}
+          </g>
 
           <g clipPath="url(#advanced-plot)">
-            <SeriesLayer
-              points={points}
-              from={window.from}
-              to={window.to}
-              width={width}
-              height={height}
-              priceHeight={priceHeight}
-              min={min}
-              max={max}
-              style={style}
-              showVolume={showVolume}
-              overlays={overlays}
-              color={rangeColor}
-            />
+            <g className="chart-stretch" style={{ transform: phase === "intro" ? fullHeightStretch : undefined }}>
+              <g className={style === "candles" ? "chart-fade-in" : undefined}>
+                <SeriesLayer
+                  points={points}
+                  from={window.from}
+                  to={window.to}
+                  width={width}
+                  height={height}
+                  priceHeight={priceHeight}
+                  min={min}
+                  max={max}
+                  style={style}
+                  showVolume={showVolume}
+                  overlays={overlays}
+                  color={rangeColor}
+                />
+              </g>
+              {/* Candle style starts as a plain line (what the standard chart shows) and dissolves into candles. */}
+              {style === "candles" && phase !== "settled" && (
+                <g className="chart-fade-out">
+                  <SeriesLayer
+                    points={points}
+                    from={window.from}
+                    to={window.to}
+                    width={width}
+                    height={height}
+                    priceHeight={priceHeight}
+                    min={min}
+                    max={max}
+                    style="line"
+                    showVolume={false}
+                    overlays={NO_OVERLAYS}
+                    color={rangeColor}
+                  />
+                </g>
+              )}
+            </g>
             {measureBox && (
               <rect
                 x={measureBox.left}
@@ -244,7 +296,16 @@ export function CandleChart({ points, window, onWindowChange, style, tool, showV
             )}
           </g>
 
-          <line x1={0} x2={width} y1={toY(last.close)} y2={toY(last.close)} stroke={trendColor(lastUp)} strokeDasharray="2 3" strokeOpacity={0.8} />
+          <line
+            className="chart-chrome"
+            x1={0}
+            x2={width}
+            y1={toY(last.close)}
+            y2={toY(last.close)}
+            stroke={trendColor(lastUp)}
+            strokeDasharray="2 3"
+            strokeOpacity={0.8}
+          />
           {pointer && (
             <g stroke="var(--color-muted)" strokeDasharray="4 4">
               <line x1={xOf(pointer.index)} x2={xOf(pointer.index)} y1={0} y2={height} />
@@ -254,17 +315,17 @@ export function CandleChart({ points, window, onWindowChange, style, tool, showV
         </svg>
 
         {yTicks.map((tick) => (
-          <span key={tick} className="tabular absolute -translate-y-1/2 pl-2 text-[11px] text-muted" style={{ left: width, top: toY(tick) }}>
+          <span key={tick} className="chart-chrome tabular absolute -translate-y-1/2 pl-2 text-[11px] text-muted" style={{ left: width, top: toY(tick) }}>
             {formatPrice(tick)}
           </span>
         ))}
         {xTicks.map((index) => (
-          <span key={index} className="absolute -translate-x-1/2 pt-1.5 text-[11px] whitespace-nowrap text-muted" style={{ left: xOf(index), top: height }}>
+          <span key={index} className="chart-chrome absolute -translate-x-1/2 pt-1.5 text-[11px] whitespace-nowrap text-muted" style={{ left: xOf(index), top: height }}>
             {formatDate(points[index].date, dateStyle)}
           </span>
         ))}
 
-        <AxisTag style={{ left: width, top: toY(last.close) }} background={trendColor(lastUp)}>
+        <AxisTag className="chart-chrome" style={{ left: width, top: toY(last.close) }} background={trendColor(lastUp)}>
           {formatPrice(last.close)}
         </AxisTag>
         {pointer && (
@@ -291,7 +352,7 @@ export function CandleChart({ points, window, onWindowChange, style, tool, showV
       </div>
 
       {/* OHLC legend: follows the crosshair, otherwise shows the latest bar. */}
-      <div className="tabular pointer-events-none absolute top-2 left-3 space-y-1 text-xs">
+      <div className="chart-chrome tabular pointer-events-none absolute top-2 left-3 space-y-1 text-xs">
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span className="text-sm font-semibold text-ink">{legendTitle}</span>
           {(["open", "high", "low", "close"] as const).map((field) => (
@@ -320,13 +381,19 @@ export function CandleChart({ points, window, onWindowChange, style, tool, showV
       </div>
     </div>
   );
-
 }
 
-function AxisTag({ children, background, style }: { children: React.ReactNode; background: string; style: React.CSSProperties }) {
+interface AxisTagProps {
+  children: React.ReactNode;
+  background: string;
+  style: React.CSSProperties;
+  className?: string;
+}
+
+function AxisTag({ children, background, style, className = "" }: AxisTagProps) {
   return (
     <span
-      className="tabular absolute ml-1 -translate-y-1/2 rounded px-1.5 py-0.5 text-[11px] font-semibold text-white"
+      className={`tabular absolute ml-1 -translate-y-1/2 rounded px-1.5 py-0.5 text-[11px] font-semibold text-white ${className}`}
       style={{ ...style, background }}
     >
       {children}
@@ -412,11 +479,11 @@ const SeriesLayer = memo(function SeriesLayer({ points, from, to, width, height,
       ) : (
         <>
           <path className="area-fill" d={areaPath(linePlots, priceHeight)} fill="url(#advanced-area)" />
-          <path d={linePath(linePlots)} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" />
+          <path d={linePath(linePlots)} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
         </>
       )}
       {overlays.map((overlay) => (
-        <path key={overlay.label} d={overlayPath(overlay.values)} fill="none" stroke={overlay.color} strokeWidth={1.5} />
+        <path key={overlay.label} d={overlayPath(overlay.values)} fill="none" stroke={overlay.color} strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
       ))}
     </>
   );

@@ -215,11 +215,20 @@ html[data-fill="off"] .area-fill {
   &::view-transition-new(*) {
     mix-blend-mode: normal;
   }
+  /*
+   * Stretch: both chart snapshots fill the morphing box (instead of keeping their own aspect ratio), so the
+   * line stretches with it. Blur: they dissolve into each other rather than hard-crossfading.
+   */
+  &::view-transition-old(stock-chart),
+  &::view-transition-new(stock-chart) {
+    block-size: 100%;
+    object-fit: fill;
+  }
   &::view-transition-old(stock-chart) {
-    animation: vt-fade-out 140ms var(--ease-in) both;
+    animation: vt-blur-out 200ms var(--ease-in) both;
   }
   &::view-transition-new(stock-chart) {
-    animation: vt-fade-in 220ms var(--ease-out) 60ms both;
+    animation: vt-blur-in 280ms var(--ease-out) 40ms both;
   }
   &::view-transition-new(adv-toolbar):only-child {
     animation: vt-drop-in 300ms var(--ease-out) both;
@@ -259,16 +268,58 @@ html[data-fill="off"] .area-fill {
   }
 }
 
-@keyframes vt-fade-out {
+@keyframes vt-blur-out {
   to {
     opacity: 0;
+    filter: blur(6px);
   }
 }
 
-@keyframes vt-fade-in {
+@keyframes vt-blur-in {
   from {
     opacity: 0;
+    filter: blur(6px);
   }
+}
+
+/*
+ * Advanced chart entrance (candle-chart.tsx, data-phase): after the morph lands a full-height line, the series
+ * stretches down into its price band while candles fade in over the dissolving line and the axes and legend
+ * appear. Transitions (not keyframes) so a phase change mid-way redirects smoothly.
+ */
+.chart-stretch {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  transition: transform 460ms var(--ease-in-out);
+}
+
+/* The full-height stretch must apply instantly (it is set once the chart is measured); only the unfold animates. */
+[data-phase="intro"] .chart-stretch {
+  transition: none;
+}
+
+.chart-fade-in {
+  transition: opacity 320ms var(--ease-out) 80ms;
+}
+
+[data-phase="intro"] .chart-fade-in {
+  opacity: 0;
+}
+
+.chart-fade-out {
+  transition: opacity 260ms var(--ease-in);
+}
+
+[data-phase="unfold"] .chart-fade-out {
+  opacity: 0;
+}
+
+.chart-chrome {
+  transition: opacity 300ms var(--ease-out) 160ms;
+}
+
+[data-phase="intro"] .chart-chrome {
+  opacity: 0;
 }
 
 @keyframes vt-drop-in {

@@ -33,7 +33,11 @@ The standard stock page is Apple-like. The advanced view gives the app its own i
 | Right panel | Watchlist table, plus a symbol card with price, volume vs. average and the 52-week range |
 
 **How the switch stays seamless and fast:**
-- **One shared element.** On desktop the switch runs as a React transition. The standard line chart morphs into the candle chart through a view transition, the toolbar drops in, the side panel slides in, and everything else crossfades. Entering takes 360ms and leaving takes 240ms.
+- **One shared element, line to candles in two steps.**
+  1. **Morph.** The advanced chart mounts as a full-height line shaped like the standard chart. The view transition morphs one line into the other: both snapshots stretch to fill the moving box and dissolve through a blur. Meanwhile the toolbar drops in, the side panel slides in, and everything else crossfades.
+  2. **Unfold.** Inside the chart, the line stretches down into its price band while the candles dissolve in over it. Volume, axes and the legend fade in.
+
+  Entering takes about 800ms in total and leaving takes 240ms. The unfold uses CSS transitions, so a range or style change mid-way redirects smoothly.
 - **Cheap animations only.** Only the chart changes size; every other animation is transform or opacity. A single morph keeps the browser's snapshot work small.
 - **Nothing reloads or reflows.** The standard page stays mounted underneath the workspace. Only its chart plot hides, inside a fixed-size box, so leaving advanced view causes no relayout and replays no animations. The selected range is shared, so you keep your place, and picking another stock in the watchlist stays in advanced view.
 - **Phones skip the view transition.** Full-screen snapshots are too heavy for phone GPUs, so the workspace slides up as one compositor-only layer. Users who prefer reduced motion get an instant switch.

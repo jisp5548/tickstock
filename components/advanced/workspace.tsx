@@ -6,6 +6,7 @@ import type { CompanyOverview } from "@/lib/alphavantage";
 import { isPlainShortcut } from "@/lib/keyboard";
 import { EASE_IN, EASE_OUT } from "@/lib/motion";
 import { useAreaFill } from "@/lib/preferences";
+import { usePrefersReducedMotion } from "@/lib/use-media-query";
 import { availableRanges, axisDateStyle, movingAverage, sliceRange, type PricePoint } from "@/lib/series";
 import type { WatchlistEntry } from "@/lib/watchlist";
 import { useOpenPalette } from "../command-palette";
@@ -56,6 +57,7 @@ export function AdvancedWorkspace({ symbol, entry, overview, daily, weekly, quot
   const { setActive } = useAdvancedView();
   const openPalette = useOpenPalette();
   const [fillOn, toggleFill] = useAreaFill();
+  const reducedMotion = usePrefersReducedMotion();
   const series = { daily, weekly };
   const available = availableRanges(series);
   const [range, setRangeId] = useChartRange(available);
@@ -184,6 +186,7 @@ export function AdvancedWorkspace({ symbol, entry, overview, daily, weekly, quot
                 overlays={overlays}
                 legendTitle={legendTitle}
                 dateStyle={axisDateStyle(range)}
+                intro={!reducedMotion}
               />
             </div>
           ) : (
