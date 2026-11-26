@@ -1,0 +1,18 @@
+{
+  "data": {
+    "symbol": "NFLX",
+    "provider": "Financial Modeling Prep",
+    "assetType": "Common Stock",
+    "name": "Netflix, Inc.",
+    "description": "Netflix, Inc. serves as a worldwide entertainment provider. Its comprehensive library features television series, motion pictures, documentaries, and mobile games, spanning numerous genres and languages. Members can effortlessly stream this content through a variety of internet-connected devices, including smart TVs, digital media players, cable boxes, and mobile phones. Furthermore, the company continues to offer a DVD-by-mail subscription service to its customers in the United States. With roughly 222 million paying subscribers distributed across 190 countries, Netflix was founded in 1997 and is headquartered in Los Gatos, California.",
+    "exchange": "NASDAQ",
+    "currency": "USD",
+    "sector": "Communication Services",
+    "industry": "Entertainment",
+    "marketCap": 243957065300,
+    "beta": 1.606,
+    "week52Low": 56.56,
+    "week52High": 109.73
+  },
+  "fetchedAt": "2026-11-26T01:12:45.483Z"
+}

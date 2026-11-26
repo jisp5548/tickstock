@@ -1,7 +1,7 @@
 "use client";
 
 import { useBackToList } from "@/lib/navigation";
-import { useIsMobile } from "@/lib/use-is-mobile";
+import { useIsMobile } from "@/lib/use-media-query";
 import { Sheet } from "../sheet";
 
 /**

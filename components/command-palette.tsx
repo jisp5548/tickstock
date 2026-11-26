@@ -9,7 +9,7 @@ import { isPlainShortcut } from "@/lib/keyboard";
 import { EASE_IN, EASE_OUT } from "@/lib/motion";
 import { markInAppNavigation } from "@/lib/navigation";
 import { useAreaFill, usePillMode } from "@/lib/preferences";
-import { useIsMobile } from "@/lib/use-is-mobile";
+import { useIsMobile } from "@/lib/use-media-query";
 import { WATCHLIST } from "@/lib/watchlist";
 import { useAdvancedView } from "./advanced/advanced-view-context";
 import { AnimatedPlaceholder } from "./animated-placeholder";

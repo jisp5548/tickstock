@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore, ViewTransition } from "react";
+import { useSyncExternalStore } from "react";
 import { subscribeNever } from "@/lib/browser-value";
 import { usePillMode } from "@/lib/preferences";
 import { useOpenPalette } from "./command-palette";
@@ -11,17 +11,15 @@ import { ModKbd } from "./kbd";
 export function SearchTrigger() {
   const openPalette = useOpenPalette();
   return (
-    <ViewTransition name="search">
-      <button
-        type="button"
-        onClick={openPalette}
-        className="flex h-11 w-full items-center gap-2 rounded-2xl bg-raised px-3 text-left text-muted transition-[background-color,scale] duration-150 ease-out hover:bg-[#2c2c2c] active:scale-[0.99]"
+    <button
+      type="button"
+      onClick={openPalette}
+      className="flex h-11 w-full items-center gap-2 rounded-2xl bg-raised px-3 text-left text-muted transition-[background-color,scale] duration-150 ease-out hover:bg-[#2c2c2c] active:scale-[0.99]"
       >
-        <SearchIcon />
-        <span className="flex-1">Search</span>
-        <ModKbd letter="K" />
-      </button>
-    </ViewTransition>
+      <SearchIcon />
+      <span className="flex-1">Search</span>
+      <ModKbd letter="K" />
+    </button>
   );
 }
 

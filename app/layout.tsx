@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { AdvancedViewProvider } from "@/components/advanced/advanced-view-context";
-import { AppShell } from "@/components/app-shell";
 import { CommandPaletteProvider } from "@/components/command-palette";
 import { Sidebar } from "@/components/sidebar";
 import { FILL_KEY } from "@/lib/preference-keys";
@@ -32,7 +31,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-dvh">
         <AdvancedViewProvider>
           <CommandPaletteProvider>
-            <AppShell sidebar={<Sidebar />}>{children}</AppShell>
+            <div className="mx-auto flex max-w-[1600px] flex-col md:flex-row">
+              <Sidebar />
+              <main className="min-w-0 flex-1">{children}</main>
+            </div>
           </CommandPaletteProvider>
         </AdvancedViewProvider>
       </body>

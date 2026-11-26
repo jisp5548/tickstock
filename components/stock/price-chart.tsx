@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, ViewTransition } from "react";
+import { Activity, useId, useState } from "react";
 import { formatDate, formatPrice } from "@/lib/format";
 import { useAreaFill } from "@/lib/preferences";
 import {
@@ -16,7 +16,7 @@ import {
   type ClosePoint,
 } from "@/lib/series";
 import { formatChange, isPositive, trendColor, trendText } from "@/lib/trend";
-import { useAdvancedView } from "../advanced/advanced-view-context";
+import { MorphTransition, useAdvancedView } from "../advanced/advanced-view-context";
 import { Kbd } from "../kbd";
 import { RangeTabs, useChartRange } from "./range-tabs";
 
@@ -37,7 +37,7 @@ export function PriceChart({ daily, weekly }: PriceChartProps) {
   const [range, setRangeId] = useChartRange(available);
   const [hoverIndex, setHoverIndex] = useState<number>();
   const [fillOn, toggleFill] = useAreaFill();
-  const { setActive: setAdvanced } = useAdvancedView();
+  const { active: advanced, setActive: setAdvanced } = useAdvancedView();
   const gradientId = useId();
 
   if (!range) {
@@ -82,9 +82,7 @@ export function PriceChart({ daily, weekly }: PriceChartProps) {
     <section aria-label="Price chart">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div aria-live="polite">
-          <ViewTransition name="stock-price">
-            <p className="tabular w-fit font-display text-4xl font-medium tracking-tight md:text-5xl">{formatPrice(focus.close)}</p>
-          </ViewTransition>
+          <p className="tabular font-display text-4xl font-medium tracking-tight md:text-5xl">{formatPrice(focus.close)}</p>
           <p className="tabular mt-1 text-sm">
             <span className={`font-semibold ${trendText(change)}`}>
               {formatChange(change, "amount")} ({formatChange(change, "percent")})
@@ -103,61 +101,66 @@ export function PriceChart({ daily, weekly }: PriceChartProps) {
         />
       </div>
 
-      <ViewTransition name="stock-chart">
-        <div
-          role="img"
-          aria-label={`${range.label}: ${formatPrice(start.close)} to ${formatPrice(points.at(-1)!.close)}. Use arrow keys to inspect prices.`}
-          tabIndex={0}
-          onKeyDown={onKeyDown}
-          onPointerMove={(event) => setHoverIndex(indexFromPointer(event))}
-          onPointerDown={(event) => setHoverIndex(indexFromPointer(event))}
-          onPointerLeave={() => setHoverIndex(undefined)}
-          className="relative mt-6 mr-14 h-64 touch-pan-y rounded-lg outline-offset-4 select-none focus-visible:outline-2 focus-visible:outline-azure md:h-80"
-        >
-          <svg viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`} preserveAspectRatio="none" className="absolute inset-0 size-full overflow-visible" aria-hidden>
-            <defs>
-              <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor={color} stopOpacity={0.32} />
-                <stop offset="100%" stopColor={color} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            {yTicks.map((tick) => (
-              <line key={tick} x1={0} x2={VIEW_WIDTH} y1={toY(tick)} y2={toY(tick)} stroke="var(--color-rule)" strokeDasharray="2 6" vectorEffect="non-scaling-stroke" />
-            ))}
-            <line x1={0} x2={VIEW_WIDTH} y1={toY(start.close)} y2={toY(start.close)} stroke="var(--color-muted)" strokeOpacity={0.5} strokeDasharray="1 4" vectorEffect="non-scaling-stroke" />
-            {/* Keyed by range so a new range re-runs the left-to-right reveal. */}
-            <g key={range.id} className="animate-reveal">
-              <path className="area-fill" d={areaPath(plots, VIEW_HEIGHT)} fill={`url(#${gradientId})`} />
-              <path d={linePath(plots)} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-            </g>
-          </svg>
-
-          {yTicks.map((tick) => (
-            <span key={tick} className="tabular absolute left-full ml-3 -translate-y-1/2 text-[11px] text-muted" style={{ top: `${percentY(tick)}%` }}>
-              {formatPrice(tick)}
-            </span>
-          ))}
-          {xLabelIndexes.map((index, i) => (
-            <span
-              key={`${index}-${i}`}
-              className={`absolute top-full mt-2 text-[11px] whitespace-nowrap text-muted ${i === 0 ? "" : i === X_LABEL_COUNT - 1 ? "-translate-x-full" : "-translate-x-1/2"}`}
-              style={{ left: `${percentX(index)}%` }}
+      {/* Fixed-size box: in advanced view only the plot inside it hides (and morphs into the candle chart), so the page never reflows. */}
+      <div className="mt-6 mr-14 h-64 md:h-80">
+        <Activity mode={advanced ? "hidden" : "visible"}>
+          <MorphTransition name="stock-chart">
+            <div
+              role="img"
+              aria-label={`${range.label}: ${formatPrice(start.close)} to ${formatPrice(points.at(-1)!.close)}. Use arrow keys to inspect prices.`}
+              tabIndex={0}
+              onKeyDown={onKeyDown}
+              onPointerMove={(event) => setHoverIndex(indexFromPointer(event))}
+              onPointerDown={(event) => setHoverIndex(indexFromPointer(event))}
+              onPointerLeave={() => setHoverIndex(undefined)}
+              className="relative h-full touch-pan-y rounded-lg outline-offset-4 select-none focus-visible:outline-2 focus-visible:outline-azure"
             >
-              {formatDate(points[index].date, axisDateStyle(range))}
-            </span>
-          ))}
+              <svg viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`} preserveAspectRatio="none" className="absolute inset-0 size-full overflow-visible" aria-hidden>
+                <defs>
+                  <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor={color} stopOpacity={0.32} />
+                    <stop offset="100%" stopColor={color} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                {yTicks.map((tick) => (
+                  <line key={tick} x1={0} x2={VIEW_WIDTH} y1={toY(tick)} y2={toY(tick)} stroke="var(--color-rule)" strokeDasharray="2 6" vectorEffect="non-scaling-stroke" />
+                ))}
+                <line x1={0} x2={VIEW_WIDTH} y1={toY(start.close)} y2={toY(start.close)} stroke="var(--color-muted)" strokeOpacity={0.5} strokeDasharray="1 4" vectorEffect="non-scaling-stroke" />
+                {/* Keyed by range so a new range re-runs the left-to-right reveal. */}
+                <g key={range.id} className="animate-reveal">
+                  <path className="area-fill" d={areaPath(plots, VIEW_HEIGHT)} fill={`url(#${gradientId})`} />
+                  <path d={linePath(plots)} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+                </g>
+              </svg>
 
-          {hoverIndex !== undefined && (
-            <>
-              <span className="pointer-events-none absolute inset-y-0 w-px bg-white/40" style={{ left: `${percentX(hoverIndex)}%` }} />
-              <span
-                className="pointer-events-none absolute size-3 -translate-1/2 rounded-full ring-2 ring-stage"
-                style={{ left: `${percentX(hoverIndex)}%`, top: `${percentY(focus.close)}%`, background: color }}
-              />
-            </>
-          )}
-        </div>
-      </ViewTransition>
+              {yTicks.map((tick) => (
+                <span key={tick} className="tabular absolute left-full ml-3 -translate-y-1/2 text-[11px] text-muted" style={{ top: `${percentY(tick)}%` }}>
+                  {formatPrice(tick)}
+                </span>
+              ))}
+              {xLabelIndexes.map((index, i) => (
+                <span
+                  key={`${index}-${i}`}
+                  className={`absolute top-full mt-2 text-[11px] whitespace-nowrap text-muted ${i === 0 ? "" : i === X_LABEL_COUNT - 1 ? "-translate-x-full" : "-translate-x-1/2"}`}
+                  style={{ left: `${percentX(index)}%` }}
+                >
+                  {formatDate(points[index].date, axisDateStyle(range))}
+                </span>
+              ))}
+
+              {hoverIndex !== undefined && (
+                <>
+                  <span className="pointer-events-none absolute inset-y-0 w-px bg-white/40" style={{ left: `${percentX(hoverIndex)}%` }} />
+                  <span
+                    className="pointer-events-none absolute size-3 -translate-1/2 rounded-full ring-2 ring-stage"
+                    style={{ left: `${percentX(hoverIndex)}%`, top: `${percentY(focus.close)}%`, background: color }}
+                  />
+                </>
+              )}
+            </div>
+          </MorphTransition>
+        </Activity>
+      </div>
 
       <div className="mt-10 flex justify-end gap-2">
         <button

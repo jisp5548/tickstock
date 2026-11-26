@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, ViewTransition } from "react";
+import { useCallback } from "react";
 import type { CompanyOverview } from "@/lib/alphavantage";
 import { formatCompact, formatDate, formatPrice, formatSigned } from "@/lib/format";
 import { averageVolume, type Change, type PricePoint } from "@/lib/series";
 import { trendText } from "@/lib/trend";
 import type { WatchlistEntry } from "@/lib/watchlist";
 import { Logo } from "../logo";
-import { staggerDelay } from "../stagger";
 import { StockLink } from "../stock-link";
 
 export interface WatchlistQuote extends WatchlistEntry {
@@ -15,44 +14,42 @@ export interface WatchlistQuote extends WatchlistEntry {
   dayChange?: Change;
 }
 
-/** TradingView-style watchlist: the standard sidebar morphs into this table (shared "watchlist" transition name). */
+/** TradingView-style watchlist table (last price and today's move). */
 export function WatchlistTable({ quotes }: { quotes: WatchlistQuote[] }) {
   // Bring the open symbol's row into view (it is marked aria-current by StockLink).
   const scrollActiveIntoView = useCallback((list: HTMLUListElement | null) => {
     list?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "nearest" });
   }, []);
   return (
-    <ViewTransition name="watchlist">
-      <section aria-label="Watchlist" className="flex min-h-0 flex-col">
-        <h2 className="px-4 pt-3 pb-2 text-sm font-semibold">Watchlist</h2>
-        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 px-4 pb-1.5 text-[11px] text-muted">
-          <span>Symbol</span>
-          <span className="w-16 text-right">Last</span>
-          <span className="w-12 text-right">Chg</span>
-          <span className="w-14 text-right">Chg%</span>
-        </div>
-        <ul ref={scrollActiveIntoView} className="tabular min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-2 text-[13px]">
-          {quotes.map((quote, index) => (
-            <li key={quote.symbol} className="animate-row-in" style={staggerDelay(index, 20)}>
-              <StockLink
-                symbol={quote.symbol}
-                className="grid h-9 grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 rounded-lg px-2.5 ring-inset transition-colors duration-100 hover:bg-white/[0.05]"
-                activeClassName="bg-white/[0.06] ring-1 ring-azure/70"
-              >
-                <span className="truncate font-semibold">{quote.symbol}</span>
-                <span className="w-16 text-right">{quote.price === undefined ? "—" : formatPrice(quote.price)}</span>
-                <span className={`w-12 text-right ${quote.dayChange ? trendText(quote.dayChange) : "text-muted"}`}>
-                  {quote.dayChange ? formatSigned(quote.dayChange.amount) : "—"}
-                </span>
-                <span className={`w-14 text-right ${quote.dayChange ? trendText(quote.dayChange) : "text-muted"}`}>
-                  {quote.dayChange ? formatSigned(quote.dayChange.percent, "%") : "—"}
-                </span>
-              </StockLink>
-            </li>
-          ))}
-        </ul>
-      </section>
-    </ViewTransition>
+    <section aria-label="Watchlist" className="flex min-h-0 flex-col">
+      <h2 className="px-4 pt-3 pb-2 text-sm font-semibold">Watchlist</h2>
+      <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 px-4 pb-1.5 text-[11px] text-muted">
+        <span>Symbol</span>
+        <span className="w-16 text-right">Last</span>
+        <span className="w-12 text-right">Chg</span>
+        <span className="w-14 text-right">Chg%</span>
+      </div>
+      <ul ref={scrollActiveIntoView} className="tabular min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-2 text-[13px]">
+        {quotes.map((quote) => (
+          <li key={quote.symbol}>
+            <StockLink
+              symbol={quote.symbol}
+              className="grid h-9 grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 rounded-lg px-2.5 ring-inset transition-colors duration-100 hover:bg-white/[0.05]"
+              activeClassName="bg-white/[0.06] ring-1 ring-azure/70"
+            >
+              <span className="truncate font-semibold">{quote.symbol}</span>
+              <span className="w-16 text-right">{quote.price === undefined ? "—" : formatPrice(quote.price)}</span>
+              <span className={`w-12 text-right ${quote.dayChange ? trendText(quote.dayChange) : "text-muted"}`}>
+                {quote.dayChange ? formatSigned(quote.dayChange.amount) : "—"}
+              </span>
+              <span className={`w-14 text-right ${quote.dayChange ? trendText(quote.dayChange) : "text-muted"}`}>
+                {quote.dayChange ? formatSigned(quote.dayChange.percent, "%") : "—"}
+              </span>
+            </StockLink>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -80,11 +77,9 @@ export function DetailsCard({ symbol, entry, overview, daily, dayChange }: Detai
   return (
     <section aria-label={`${symbol} details`} className="space-y-4 px-4 pt-4 pb-5">
       <div className="flex items-center gap-3">
-        <Logo symbol={symbol} light={entry?.lightLogo} morph />
+        <Logo symbol={symbol} light={entry?.lightLogo} />
         <div className="min-w-0">
-          <ViewTransition name="stock-symbol">
-            <p className="w-fit font-display text-lg font-medium tracking-tight">{symbol}</p>
-          </ViewTransition>
+          <p className="font-display text-lg font-medium tracking-tight">{symbol}</p>
           <p className="truncate text-xs text-muted">
             {overview?.name ?? entry?.name ?? symbol}
             {overview?.exchange && ` · ${overview.exchange}`}
@@ -96,9 +91,7 @@ export function DetailsCard({ symbol, entry, overview, daily, dayChange }: Detai
       {latest && (
         <div>
           <p className="flex flex-wrap items-baseline gap-x-2">
-            <ViewTransition name="stock-price">
-              <span className="tabular font-display text-3xl font-medium tracking-tight">{formatPrice(latest.close)}</span>
-            </ViewTransition>
+            <span className="tabular font-display text-3xl font-medium tracking-tight">{formatPrice(latest.close)}</span>
             <span className="text-xs text-muted">{overview?.currency ?? "USD"}</span>
             {dayChange && (
               <span className={`tabular text-sm font-semibold ${trendText(dayChange)}`}>

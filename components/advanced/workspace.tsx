@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useMemo, useRef, useState, ViewTransition } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CompanyOverview } from "@/lib/alphavantage";
 import { isPlainShortcut } from "@/lib/keyboard";
 import { EASE_IN, EASE_OUT } from "@/lib/motion";
@@ -22,7 +22,7 @@ import {
 } from "../icons";
 import { Kbd, ModKbd } from "../kbd";
 import { RangeTabs, useChartRange } from "../stock/range-tabs";
-import { useAdvancedView } from "./advanced-view-context";
+import { MorphTransition, useAdvancedView } from "./advanced-view-context";
 import { CandleChart, zoomWindow, type BarWindow, type ChartStyle, type ChartTool, type Overlay } from "./candle-chart";
 import { DetailsCard, WatchlistTable, type WatchlistQuote } from "./side-panel";
 
@@ -49,7 +49,8 @@ interface AdvancedWorkspaceProps {
 /**
  * TradingView-style workspace: toolbar on top, tool rail on the left, the chart in the middle, ranges below
  * and watchlist + symbol details on the right. Panels float on black with hairline gaps, unlike the standard
- * view's single column, and every shared element arrives via a named view transition.
+ * view's single column. On desktop the chart morphs in from the standard chart and the toolbar and side
+ * panel slide in (all transform/opacity); everything else arrives with the page crossfade.
  */
 export function AdvancedWorkspace({ symbol, entry, overview, daily, weekly, quotes }: AdvancedWorkspaceProps) {
   const { setActive } = useAdvancedView();
@@ -78,8 +79,9 @@ export function AdvancedWorkspace({ symbol, entry, overview, daily, weekly, quot
 
   const zoom = (factor: number) => setZoomedWindow(zoomWindow(barWindow, points.length, factor));
 
-  // The workspace covers the page; stop the page underneath from scrolling.
-  useEffect(() => {
+  // The workspace covers the page; stop the page underneath from scrolling. A layout effect applies the lock
+  // before the view transition snapshots the new state, so nothing reflows mid-animation.
+  useLayoutEffect(() => {
     const root = document.documentElement;
     const previous = root.style.overflow;
     root.style.overflow = "hidden";
@@ -110,21 +112,19 @@ export function AdvancedWorkspace({ symbol, entry, overview, daily, weekly, quot
     <div
       role="region"
       aria-label={`${symbol} advanced view`}
-      className="fixed inset-0 z-50 grid auto-rows-min grid-cols-1 gap-1 overflow-y-auto bg-black p-1 pt-[max(0.25rem,env(safe-area-inset-top))] pb-[max(0.25rem,env(safe-area-inset-bottom))] md:grid-cols-[3rem_minmax(0,1fr)_20rem] md:grid-rows-[3rem_minmax(0,1fr)_2.75rem] md:overflow-hidden"
+      className="fixed inset-0 z-50 grid max-md:animate-workspace-in auto-rows-min grid-cols-1 gap-1 overflow-y-auto bg-black p-1 pt-[max(0.25rem,env(safe-area-inset-top))] pb-[max(0.25rem,env(safe-area-inset-bottom))] md:grid-cols-[3rem_minmax(0,1fr)_20rem] md:grid-rows-[3rem_minmax(0,1fr)_2.75rem] md:overflow-hidden"
     >
-      <ViewTransition name="adv-toolbar">
+      <MorphTransition name="adv-toolbar">
         <header className="flex h-12 items-center gap-1 overflow-x-auto rounded-xl bg-stage px-2 md:col-span-3 md:h-auto">
-          <ViewTransition name="search">
-            <button
-              type="button"
-              onClick={openPalette}
-              className="flex h-9 shrink-0 items-center gap-2 rounded-lg bg-raised px-3 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-[#2c2c2c] active:scale-[0.97]"
-            >
-              <SearchIcon className="size-4 text-muted" />
-              {symbol}
-              <ModKbd letter="K" />
-            </button>
-          </ViewTransition>
+          <button
+            type="button"
+            onClick={openPalette}
+            className="flex h-9 shrink-0 items-center gap-2 rounded-lg bg-raised px-3 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-[#2c2c2c] active:scale-[0.97]"
+          >
+            <SearchIcon className="size-4 text-muted" />
+            {symbol}
+            <ModKbd letter="K" />
+          </button>
           <Divider />
           <Segmented
             label="Chart style"
@@ -149,30 +149,28 @@ export function AdvancedWorkspace({ symbol, entry, overview, daily, weekly, quot
             Standard view <Kbd>V</Kbd>
           </ToolbarButton>
         </header>
-      </ViewTransition>
+      </MorphTransition>
 
-      <ViewTransition name="adv-rail">
-        <nav aria-label="Chart tools" className="hidden flex-col items-center gap-1 rounded-xl bg-stage py-2 md:col-start-1 md:row-span-2 md:row-start-2 md:flex">
-          <RailButton label="Crosshair" shortcut="C" active={tool === "crosshair"} onClick={() => setTool("crosshair")}>
-            <CrosshairIcon className="size-5" />
-          </RailButton>
-          <RailButton label="Measure" shortcut="M" active={tool === "measure"} onClick={() => setTool("measure")}>
-            <RulerIcon className="size-5" />
-          </RailButton>
-          <span className="my-1 h-px w-6 bg-rule" />
-          <RailButton label="Zoom in" shortcut="+" onClick={() => zoom(1 / BUTTON_ZOOM)}>
-            <ZoomInIcon className="size-5" />
-          </RailButton>
-          <RailButton label="Zoom out" shortcut="−" onClick={() => zoom(BUTTON_ZOOM)}>
-            <ZoomOutIcon className="size-5" />
-          </RailButton>
-          <RailButton label="Fit all" shortcut="0" onClick={() => setZoomedWindow(undefined)}>
-            <FitIcon className="size-5" />
-          </RailButton>
-        </nav>
-      </ViewTransition>
+      <nav aria-label="Chart tools" className="hidden flex-col items-center gap-1 rounded-xl bg-stage py-2 md:col-start-1 md:row-span-2 md:row-start-2 md:flex">
+        <RailButton label="Crosshair" shortcut="C" active={tool === "crosshair"} onClick={() => setTool("crosshair")}>
+          <CrosshairIcon className="size-5" />
+        </RailButton>
+        <RailButton label="Measure" shortcut="M" active={tool === "measure"} onClick={() => setTool("measure")}>
+          <RulerIcon className="size-5" />
+        </RailButton>
+        <span className="my-1 h-px w-6 bg-rule" />
+        <RailButton label="Zoom in" shortcut="+" onClick={() => zoom(1 / BUTTON_ZOOM)}>
+          <ZoomInIcon className="size-5" />
+        </RailButton>
+        <RailButton label="Zoom out" shortcut="−" onClick={() => zoom(BUTTON_ZOOM)}>
+          <ZoomOutIcon className="size-5" />
+        </RailButton>
+        <RailButton label="Fit all" shortcut="0" onClick={() => setZoomedWindow(undefined)}>
+          <FitIcon className="size-5" />
+        </RailButton>
+      </nav>
 
-      <ViewTransition name="stock-chart">
+      <MorphTransition name="stock-chart">
         <section aria-label="Chart" className="relative h-[52dvh] overflow-hidden rounded-xl bg-stage md:col-start-2 md:row-start-2 md:h-auto">
           {range ? (
             <div className="absolute inset-x-2 top-2 bottom-1">
@@ -192,40 +190,41 @@ export function AdvancedWorkspace({ symbol, entry, overview, daily, weekly, quot
             <p className="grid h-full place-items-center text-sm text-muted">Price history is unavailable right now.</p>
           )}
         </section>
-      </ViewTransition>
+      </MorphTransition>
 
-      <ViewTransition name="adv-footer">
-        <footer className="flex h-11 items-center justify-between gap-3 overflow-x-auto rounded-xl bg-stage px-2 md:col-start-2 md:row-start-3 md:h-auto">
-          {range && (
-            <RangeTabs
-              selected={range}
-              available={available}
-              onSelect={(id) => {
-                setRangeId(id);
-                setZoomedWindow(undefined);
-              }}
-              className="gap-0.5"
-            />
-          )}
-          <span className="tabular shrink-0 text-xs text-muted max-sm:hidden">
-            {interval === "1D" ? "Daily" : "Weekly"} bars · {barWindow.to - barWindow.from + 1} shown
-          </span>
-        </footer>
-      </ViewTransition>
+      <footer className="flex h-11 items-center justify-between gap-3 overflow-x-auto rounded-xl bg-stage px-2 md:col-start-2 md:row-start-3 md:h-auto">
+        {range && (
+          <RangeTabs
+            selected={range}
+            available={available}
+            onSelect={(id) => {
+              setRangeId(id);
+              setZoomedWindow(undefined);
+            }}
+            className="gap-0.5"
+          />
+        )}
+        <span className="tabular shrink-0 text-xs text-muted max-sm:hidden">
+          {interval === "1D" ? "Daily" : "Weekly"} bars · {barWindow.to - barWindow.from + 1} shown
+        </span>
+      </footer>
 
-      <aside className="flex flex-col overflow-hidden rounded-xl bg-stage md:col-start-3 md:row-span-2 md:row-start-2 md:overflow-y-auto">
-        <div className="flex max-h-80 min-h-0 flex-col md:max-h-none md:flex-1">
-          <WatchlistTable quotes={quotes} />
-        </div>
-        <div className="h-px shrink-0 bg-rule" />
-        <DetailsCard
-          symbol={symbol}
-          entry={entry}
-          overview={overview}
-          daily={daily}
-          dayChange={quotes.find((quote) => quote.symbol === symbol)?.dayChange}
-        />
-      </aside>
+      <MorphTransition name="adv-panel">
+        {/* On phones the panel starts below the fold; content-visibility skips its layout and paint until scrolled to. */}
+        <aside className="flex flex-col overflow-hidden rounded-xl bg-stage [contain-intrinsic-size:auto_40rem] max-md:[content-visibility:auto] md:col-start-3 md:row-span-2 md:row-start-2 md:overflow-y-auto">
+          <div className="flex max-h-80 min-h-0 flex-col md:max-h-none md:flex-1">
+            <WatchlistTable quotes={quotes} />
+          </div>
+          <div className="h-px shrink-0 bg-rule" />
+          <DetailsCard
+            symbol={symbol}
+            entry={entry}
+            overview={overview}
+            daily={daily}
+            dayChange={quotes.find((quote) => quote.symbol === symbol)?.dayChange}
+          />
+        </aside>
+      </MorphTransition>
     </div>
   );
 }

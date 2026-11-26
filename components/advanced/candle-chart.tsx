@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { formatCompact, formatDate, formatPrice } from "@/lib/format";
 import { areaPath, changeBetween, linePath, niceTicks, valueAtY, yScale, type PricePoint } from "@/lib/series";
 import { formatChange, isPositive, trendColor } from "@/lib/trend";
@@ -28,6 +28,16 @@ export interface Overlay {
   label: string;
   color: string;
   values: (number | undefined)[];
+}
+
+/** Price ↔ y mapping for the price area, leaving LEGEND_SPACE clear at the top. */
+function priceScale(min: number, max: number, priceHeight: number) {
+  const scaleY = yScale(min, max, priceHeight - LEGEND_SPACE, INSET);
+  const invertY = valueAtY(min, max, priceHeight - LEGEND_SPACE, INSET);
+  return {
+    toY: (value: number) => LEGEND_SPACE + scaleY(value),
+    priceAt: (y: number) => invertY(y - LEGEND_SPACE),
+  };
 }
 
 export function zoomWindow(window: BarWindow, total: number, factor: number, anchorRatio = 0.5): BarWindow {
@@ -85,10 +95,7 @@ export function CandleChart({ points, window, onWindowChange, style, tool, showV
   const highs = style === "candles" ? visible.map((point) => point.high) : visible.map((point) => point.close);
   const min = Math.min(...lows, ...visibleOverlayValues);
   const max = Math.max(...highs, ...visibleOverlayValues);
-  const scaleY = yScale(min, max, priceHeight - LEGEND_SPACE, INSET);
-  const invertY = valueAtY(min, max, priceHeight - LEGEND_SPACE, INSET);
-  const toY = (value: number) => LEGEND_SPACE + scaleY(value);
-  const priceAt = (y: number) => invertY(y - LEGEND_SPACE);
+  const { toY, priceAt } = priceScale(min, max, priceHeight);
 
   // Wheel zoom needs a non-passive listener to stop the page from scrolling.
   useEffect(() => {
@@ -106,26 +113,6 @@ export function CandleChart({ points, window, onWindowChange, style, tool, showV
 
   if (!visible.length) return <div ref={plotRef} className="size-full" />;
 
-  const barWidth = Math.max(Math.min(slot * 0.7, 18), 1);
-  const paths = { upBody: "", downBody: "", upWick: "", downWick: "", upVolume: "", downVolume: "" };
-  const maxVolume = Math.max(...visible.map((point) => point.volume), 1);
-  const volumeTop = height * (1 - VOLUME_SHARE * 0.85);
-  visible.forEach((point, offset) => {
-    const index = window.from + offset;
-    const x = xOf(index);
-    const up = point.close >= point.open;
-    if (style === "candles") {
-      const top = toY(Math.max(point.open, point.close));
-      const bottom = Math.max(toY(Math.min(point.open, point.close)), top + 1);
-      paths[up ? "upWick" : "downWick"] += `M${x} ${toY(point.high)}V${toY(point.low)}`;
-      paths[up ? "upBody" : "downBody"] += `M${x - barWidth / 2} ${top}h${barWidth}V${bottom}h${-barWidth}Z`;
-    }
-    if (showVolume) {
-      const barTop = height - (point.volume / maxVolume) * (height - volumeTop);
-      paths[up ? "upVolume" : "downVolume"] += `M${x - barWidth / 2} ${height}V${barTop}h${barWidth}V${height}Z`;
-    }
-  });
-  const linePlots = visible.map((point, offset) => ({ x: xOf(window.from + offset), y: toY(point.close) }));
   const rangeColor = trendColor(isPositive(changeBetween(visible[0].close, visible.at(-1)!.close)));
 
   const last = points.at(-1)!;
@@ -194,22 +181,6 @@ export function CandleChart({ points, window, onWindowChange, style, tool, showV
     return { left: xOf(from) - slot / 2, right: xOf(to) + slot / 2, top: Math.min(y1, y2), bottom: Math.max(y1, y2), change, bars: to - from };
   }
 
-
-  function overlayPath(values: (number | undefined)[]): string {
-    let path = "";
-    let drawing = false;
-    for (let index = window.from; index <= window.to; index++) {
-      const value = values[index];
-      if (value === undefined) {
-        drawing = false;
-        continue;
-      }
-      path += `${drawing ? "L" : "M"}${xOf(index).toFixed(1)} ${toY(value).toFixed(1)}`;
-      drawing = true;
-    }
-    return path;
-  }
-
   const measureBox = measurement && measurementGeometry(measurement);
 
   return (
@@ -245,28 +216,20 @@ export function CandleChart({ points, window, onWindowChange, style, tool, showV
           ))}
 
           <g clipPath="url(#advanced-plot)">
-            {showVolume && (
-              <>
-                <path d={paths.upVolume} fill="var(--color-up)" fillOpacity={0.28} />
-                <path d={paths.downVolume} fill="var(--color-down)" fillOpacity={0.28} />
-              </>
-            )}
-            {style === "candles" ? (
-              <>
-                <path d={paths.upWick} stroke="var(--color-up)" strokeWidth={1} />
-                <path d={paths.downWick} stroke="var(--color-down)" strokeWidth={1} />
-                <path d={paths.upBody} fill="var(--color-up)" />
-                <path d={paths.downBody} fill="var(--color-down)" />
-              </>
-            ) : (
-              <>
-                <path className="area-fill" d={areaPath(linePlots, priceHeight)} fill="url(#advanced-area)" />
-                <path d={linePath(linePlots)} fill="none" stroke={rangeColor} strokeWidth={2} strokeLinejoin="round" />
-              </>
-            )}
-            {overlays.map((overlay) => (
-              <path key={overlay.label} d={overlayPath(overlay.values)} fill="none" stroke={overlay.color} strokeWidth={1.5} />
-            ))}
+            <SeriesLayer
+              points={points}
+              from={window.from}
+              to={window.to}
+              width={width}
+              height={height}
+              priceHeight={priceHeight}
+              min={min}
+              max={max}
+              style={style}
+              showVolume={showVolume}
+              overlays={overlays}
+              color={rangeColor}
+            />
             {measureBox && (
               <rect
                 x={measureBox.left}
@@ -370,3 +333,91 @@ function AxisTag({ children, background, style }: { children: React.ReactNode; b
     </span>
   );
 }
+
+interface SeriesLayerProps {
+  points: PricePoint[];
+  from: number;
+  to: number;
+  width: number;
+  height: number;
+  priceHeight: number;
+  min: number;
+  max: number;
+  style: ChartStyle;
+  showVolume: boolean;
+  overlays: Overlay[];
+  color: string;
+}
+
+/**
+ * Candles, volume, line and moving averages. Memoized on primitive props so crosshair and legend updates
+ * (every pointer move) don't rebuild hundreds of bars; it only redraws on zoom, pan, resize or settings.
+ * Each colour is a single <path>, keeping the DOM to a handful of nodes even for ~1,350 weekly bars.
+ */
+const SeriesLayer = memo(function SeriesLayer({ points, from, to, width, height, priceHeight, min, max, style, showVolume, overlays, color }: SeriesLayerProps) {
+  const { toY } = priceScale(min, max, priceHeight);
+  const visible = points.slice(from, to + 1);
+  const slot = width / visible.length;
+  const xOf = (index: number) => (index - from + 0.5) * slot;
+  const barWidth = Math.max(Math.min(slot * 0.7, 18), 1);
+  const paths = { upBody: "", downBody: "", upWick: "", downWick: "", upVolume: "", downVolume: "" };
+  const maxVolume = Math.max(...visible.map((point) => point.volume), 1);
+  const volumeTop = height * (1 - VOLUME_SHARE * 0.85);
+  visible.forEach((point, offset) => {
+    const x = xOf(from + offset);
+    const up = point.close >= point.open;
+    if (style === "candles") {
+      const top = toY(Math.max(point.open, point.close));
+      const bottom = Math.max(toY(Math.min(point.open, point.close)), top + 1);
+      paths[up ? "upWick" : "downWick"] += `M${x} ${toY(point.high)}V${toY(point.low)}`;
+      paths[up ? "upBody" : "downBody"] += `M${x - barWidth / 2} ${top}h${barWidth}V${bottom}h${-barWidth}Z`;
+    }
+    if (showVolume) {
+      const barTop = height - (point.volume / maxVolume) * (height - volumeTop);
+      paths[up ? "upVolume" : "downVolume"] += `M${x - barWidth / 2} ${height}V${barTop}h${barWidth}V${height}Z`;
+    }
+  });
+
+  function overlayPath(values: (number | undefined)[]): string {
+    let path = "";
+    let drawing = false;
+    for (let index = from; index <= to; index++) {
+      const value = values[index];
+      if (value === undefined) {
+        drawing = false;
+        continue;
+      }
+      path += `${drawing ? "L" : "M"}${xOf(index).toFixed(1)} ${toY(value).toFixed(1)}`;
+      drawing = true;
+    }
+    return path;
+  }
+
+  const linePlots = visible.map((point, offset) => ({ x: xOf(from + offset), y: toY(point.close) }));
+  return (
+    <>
+      {showVolume && (
+        <>
+          <path d={paths.upVolume} fill="var(--color-up)" fillOpacity={0.28} />
+          <path d={paths.downVolume} fill="var(--color-down)" fillOpacity={0.28} />
+        </>
+      )}
+      {style === "candles" ? (
+        <>
+          <path d={paths.upWick} stroke="var(--color-up)" strokeWidth={1} />
+          <path d={paths.downWick} stroke="var(--color-down)" strokeWidth={1} />
+          <path d={paths.upBody} fill="var(--color-up)" />
+          <path d={paths.downBody} fill="var(--color-down)" />
+        </>
+      ) : (
+        <>
+          <path className="area-fill" d={areaPath(linePlots, priceHeight)} fill="url(#advanced-area)" />
+          <path d={linePath(linePlots)} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" />
+        </>
+      )}
+      {overlays.map((overlay) => (
+        <path key={overlay.label} d={overlayPath(overlay.values)} fill="none" stroke={overlay.color} strokeWidth={1.5} />
+      ))}
+    </>
+  );
+});

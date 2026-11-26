@@ -33,6 +33,14 @@
   --animate-sheen: sheen 6s linear infinite;
   --animate-placeholder: placeholder-in 360ms var(--ease-out) both;
   --animate-sheet-in: sheet-in 340ms var(--ease-out) both;
+  --animate-workspace-in: workspace-in 280ms var(--ease-out) both;
+}
+
+@keyframes workspace-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
 }
 
 @keyframes placeholder-in {
@@ -194,69 +202,60 @@ html[data-fill="off"] .area-fill {
 }
 
 /*
- * Standard ↔ advanced view choreography (transition types set in advanced-view-context.tsx).
- * Entering is the expressive moment (520ms); leaving is shorter (380ms). Moves ease in-out throughout.
+ * Standard ↔ advanced view (desktop only; phones skip the view transition, see advanced-view-context.tsx).
+ * Kept lean for performance: a single size-morphing element (the chart), two transform/opacity slide-ins and
+ * the page crossfade. Entering takes 360ms, leaving 240ms.
  */
 :root:active-view-transition-type(advanced-enter, advanced-exit) {
-  &::view-transition-group(*) {
+  &::view-transition-group(stock-chart) {
     animation-timing-function: var(--ease-in-out);
   }
-
-  /* Old snapshots clear out early and new ones arrive a beat later, so large crossfades never stack two full images. */
-  &::view-transition-old(*) {
-    animation: vt-fade-out 180ms var(--ease-in) both;
-  }
+  /* Plain blending is cheaper than the default plus-lighter; the old chart clears before the new one arrives. */
+  &::view-transition-old(*),
   &::view-transition-new(*) {
-    animation: vt-fade-in 300ms var(--ease-out) 90ms both;
+    mix-blend-mode: normal;
   }
-  &::view-transition-old(root) {
-    animation: vt-fade-out 220ms var(--ease-in) both;
+  &::view-transition-old(stock-chart) {
+    animation: vt-fade-out 140ms var(--ease-in) both;
   }
-  &::view-transition-new(root) {
-    animation: vt-fade-in 260ms var(--ease-out) both;
+  &::view-transition-new(stock-chart) {
+    animation: vt-fade-in 220ms var(--ease-out) 60ms both;
   }
-
-  /* The watchlist crosses the whole screen, so it travels on a slight arc instead of a straight line. */
-  &::view-transition-image-pair(watchlist) {
-    animation: vt-arc var(--vt-duration) var(--ease-in-out) both;
-  }
-  /* The chart winds up (dips) before growing and settles at the end: a subtle anticipation / follow-through, no bounce. */
-  &::view-transition-image-pair(stock-chart) {
-    animation: vt-anticipate var(--vt-duration) var(--ease-in-out) both;
-  }
-
-  /* Workspace-only panels arrive from the edge they live on, staggered; they leave faster than they came. */
   &::view-transition-new(adv-toolbar):only-child {
-    animation: vt-drop-in 360ms var(--ease-out) 120ms both;
+    animation: vt-drop-in 300ms var(--ease-out) both;
   }
-  &::view-transition-new(adv-rail):only-child {
-    animation: vt-slide-in 360ms var(--ease-out) 170ms both;
-  }
-  &::view-transition-new(adv-footer):only-child {
-    animation: vt-rise-in 360ms var(--ease-out) 220ms both;
+  &::view-transition-new(adv-panel):only-child {
+    animation: vt-panel-in 300ms var(--ease-out) 40ms both;
   }
   &::view-transition-old(adv-toolbar):only-child {
     animation: vt-drop-out 160ms var(--ease-in) both;
   }
-  &::view-transition-old(adv-rail):only-child {
-    animation: vt-slide-out 160ms var(--ease-in) both;
-  }
-  &::view-transition-old(adv-footer):only-child {
-    animation: vt-rise-out 160ms var(--ease-in) both;
+  &::view-transition-old(adv-panel):only-child {
+    animation: vt-panel-out 160ms var(--ease-in) both;
   }
 }
 
 :root:active-view-transition-type(advanced-enter) {
-  --vt-duration: 520ms;
-  &::view-transition-group(*) {
-    animation-duration: 520ms;
+  &::view-transition-group(stock-chart) {
+    animation-duration: 360ms;
+  }
+  &::view-transition-old(root) {
+    animation-duration: 160ms;
+  }
+  &::view-transition-new(root) {
+    animation-duration: 240ms;
   }
 }
 
 :root:active-view-transition-type(advanced-exit) {
-  --vt-duration: 380ms;
-  &::view-transition-group(*) {
-    animation-duration: 380ms;
+  &::view-transition-group(stock-chart) {
+    animation-duration: 240ms;
+  }
+  &::view-transition-old(root) {
+    animation-duration: 120ms;
+  }
+  &::view-transition-new(root) {
+    animation-duration: 160ms;
   }
 }
 
@@ -269,21 +268,6 @@ html[data-fill="off"] .area-fill {
 @keyframes vt-fade-in {
   from {
     opacity: 0;
-  }
-}
-
-@keyframes vt-arc {
-  50% {
-    translate: 0 -28px;
-  }
-}
-
-@keyframes vt-anticipate {
-  12% {
-    scale: 0.97;
-  }
-  85% {
-    scale: 1.006;
   }
 }
 
@@ -301,31 +285,17 @@ html[data-fill="off"] .area-fill {
   }
 }
 
-@keyframes vt-slide-in {
+@keyframes vt-panel-in {
   from {
     opacity: 0;
-    translate: -14px 0;
+    translate: 24px 0;
   }
 }
 
-@keyframes vt-slide-out {
+@keyframes vt-panel-out {
   to {
     opacity: 0;
-    translate: -10px 0;
-  }
-}
-
-@keyframes vt-rise-in {
-  from {
-    opacity: 0;
-    translate: 0 14px;
-  }
-}
-
-@keyframes vt-rise-out {
-  to {
-    opacity: 0;
-    translate: 0 10px;
+    translate: 16px 0;
   }
 }
 

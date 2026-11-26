@@ -59,5 +59,13 @@ export function Logo({ symbol, size = "sm", light = false, morph = false }: Logo
         )}
       </span>
   );
-  return morph ? <ViewTransition name={`logo-${symbol}`}>{tile}</ViewTransition> : tile;
+  // update="none": the logo only morphs between routes. Without it, any layout shift around a mounted logo
+  // (e.g. the scroll lock when advanced view opens) would start a full-page view transition, even on phones.
+  return morph ? (
+    <ViewTransition name={`logo-${symbol}`} update="none">
+      {tile}
+    </ViewTransition>
+  ) : (
+    tile
+  );
 }

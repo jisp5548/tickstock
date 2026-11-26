@@ -1,0 +1,18 @@
+{
+  "data": {
+    "symbol": "V",
+    "provider": "Financial Modeling Prep",
+    "assetType": "Common Stock",
+    "name": "Visa Inc.",
+    "description": "Visa Inc. functions globally as a leading technology company dedicated to payments. Its primary role is to enable the secure and efficient digital transfer of funds among a wide array of participants, including individual consumers, retail businesses, banking institutions, corporations, strategic partners, and governmental bodies. At the heart of its operations is VisaNet, a highly sophisticated transaction processing network that handles the critical functions of authorizing, clearing, and settling all payment transactions. In addition to this core infrastructure, the company also provides a variety of card products, innovative digital platforms, and an extensive range of supplementary value-added services. These offerings are distributed under several widely recognized brands, including Visa, Visa Electron, Interlink, VPAY, and PLUS. Demonstrating its commitment to enhancing user experience, Visa Inc. has established a key strategic partnership with Ooredoo in Qatar, focused on improving payment solutions for Visa cardholders and Ooredoo customers within the country. The company was established in 1958 and its corporate headquarters are situated in San Francisco, California.",
+    "exchange": "NYSE",
+    "currency": "USD",
+    "sector": "Financial Services",
+    "industry": "Financial - Credit Services",
+    "marketCap": 791826874732,
+    "beta": 0.786,
+    "week52Low": 293.89,
+    "week52High": 442.23
+  },
+  "fetchedAt": "2026-11-26T01:12:52.221Z"
+}

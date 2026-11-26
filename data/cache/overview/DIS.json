@@ -1,0 +1,18 @@
+{
+  "data": {
+    "symbol": "DIS",
+    "provider": "Financial Modeling Prep",
+    "assetType": "Common Stock",
+    "name": "The Walt Disney Company",
+    "description": "Operating worldwide through its various subsidiaries, The Walt Disney Company (DIS) stands as a prominent global entertainment enterprise. Its vast array of activities is organized into two primary divisions: Disney Media and Entertainment Distribution, and Disney Parks, Experiences and Products. Within its media and entertainment arm, Disney is actively engaged in developing and distributing both cinematic films and television series. This segment encompasses the management of well-known broadcast networks such as ABC, Disney, ESPN, Freeform, FX, Fox, National Geographic, and Star, as well as renowned film studios responsible for productions under banners like Walt Disney Pictures, Twentieth Century Studios, Marvel, Lucasfilm, Pixar, and Searchlight Pictures. The company also delivers content directly to consumers through its popular streaming platforms, including Disney+, Disney+ Hotstar, ESPN+, Hulu, and Star+. Further activities involve licensing its film and television content to external broadcasters and subscription video-on-demand services, overseeing theatrical releases, home entertainment distribution, and music distribution, staging and licensing live entertainment spectacles, and offering specialized post-production services via Industrial Light & Magic and Skywalker Sound. The \"Parks, Experiences and Products\" segment manages a celebrated collection of global theme parks and resorts, which notably includes Walt Disney World Resort in Florida, Disneyland Resort in California, Disneyland Paris, Hong Kong Disneyland Resort, and Shanghai Disney Resort. This division also features the Disney Cruise Line, Disney Vacation Club, National Geographic Expeditions, Adventures by Disney, and Aulani, a resort and spa located in Hawaii. The company extends its brand presence by licensing its intellectual property to a third party for the operations of the Tokyo Disney Resort. A substantial part of this segment involves consumer products, where Disney licenses its iconic trade names, characters, visual elements, literary works, and other intellectual property for use on a diverse range of merchandise, published materials, and games. Moreover, it sells branded merchandise directly through its retail stores, online platforms, and wholesale channels, and actively develops and publishes various books, comic books, and magazines. The Walt Disney Company was founded in 1923 and is based in Burbank, California.",
+    "exchange": "NYSE",
+    "currency": "USD",
+    "sector": "Communication Services",
+    "industry": "Entertainment",
+    "marketCap": 214528568000,
+    "beta": 1.426,
+    "week52Low": 92.19,
+    "week52High": 126.28
+  },
+  "fetchedAt": "2026-11-26T01:12:59.267Z"
+}

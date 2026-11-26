@@ -32,31 +32,24 @@ The standard stock page is Apple-like. The advanced view gives the app its own i
 | Bottom bar | Ranges |
 | Right panel | Watchlist table, plus a symbol card with price, volume vs. average and the 52-week range |
 
-**How the switch stays seamless:**
-- **One morph for everything.** Toggling runs in a React transition, so named `<ViewTransition>` elements morph from their standard positions into the workspace in a single motion. The sidebar becomes the watchlist; the search box becomes the toolbar's symbol chip; the line chart becomes the candle chart; the price, logo, symbol and range tabs move into place.
-- **Choreography** (`app/globals.css`):
-  - Entering takes 520ms and leaving takes 380ms, both eased in and out.
-  - Old snapshots clear out before new ones fade in, so large crossfades never stack two images.
-  - The watchlist travels on an arc. The chart dips slightly before growing and settles at the end (under 1%, not a bounce).
-  - Workspace-only panels arrive from their own edges, staggered.
-- **Nothing reloads.** The standard page stays mounted while hidden (`<Activity>`), and the selected range is shared, so switching back and forth keeps your place. Picking another stock in the watchlist stays in advanced view.
-- **Fast drawing.** Each candle color, wick color and volume color is drawn as a single SVG path, so even ~1,350 weekly bars re-render cheaply while zooming and panning.
+**How the switch stays seamless and fast:**
+- **One shared element.** On desktop the switch runs as a React transition. The standard line chart morphs into the candle chart through a view transition, the toolbar drops in, the side panel slides in, and everything else crossfades. Entering takes 360ms and leaving takes 240ms.
+- **Cheap animations only.** Only the chart changes size; every other animation is transform or opacity. A single morph keeps the browser's snapshot work small.
+- **Nothing reloads or reflows.** The standard page stays mounted underneath the workspace. Only its chart plot hides, inside a fixed-size box, so leaving advanced view causes no relayout and replays no animations. The selected range is shared, so you keep your place, and picking another stock in the watchlist stays in advanced view.
+- **Phones skip the view transition.** Full-screen snapshots are too heavy for phone GPUs, so the workspace slides up as one compositor-only layer. Users who prefer reduced motion get an instant switch.
+- **The switch never blocks input.** It is always a non-blocking React transition, so a tap or key press responds immediately.
+- **Scrubbing stays cheap.** Each candle color, wick color and volume color is drawn as a single SVG path. The bars are memoized, so moving the crosshair redraws only the overlay, not ~1,350 weekly bars.
 
-## Running it
+**Performance trade-off.** An earlier version also morphed the watchlist (on an arc), the price, the symbol, the logo, the search box and the range tabs, with extra motion on the chart. It looked richer but stuttered on slower machines and phones, so it was cut back.
 
-```bash
-npm install
-cp .env.example .env.local   # then fill in the keys below
-npm run dev
-```
+Production build, CPU throttled (desktop 4×, phone 6×), worst frame during the switch:
 
-| Variable | Where to get it |
-| --- | --- |
-| `ALPHAVANTAGE_API_KEY` | https://www.alphavantage.co/support/#api-key (free) |
-| `TAVILY_API_KEY` | https://app.tavily.com (free tier, used for news) |
-| `FMP_API_KEY` | https://site.financialmodelingprep.com (free tier, used for company profiles; see below) |
+| | Before | After |
+| --- | --- | --- |
+| Desktop enter / exit | 92ms / 87ms | 63–67ms / 37ms |
+| Phone enter / exit | 129ms / 121ms | 46ms / 17ms |
 
-The app also runs with **no keys at all**. It serves the snapshot committed in `data/cache/` and shows a "Cached snapshot" badge.
+Long tasks on phone exit dropped from 384ms to 0ms. The remaining ~60ms desktop frame is the browser's one-time snapshot, which every view transition pays.
 
 ## Why company profiles can come from Financial Modeling Prep
 
