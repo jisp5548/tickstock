@@ -2,7 +2,7 @@
 
 A stock watchlist built with Next.js 16 (App Router) on the AlphaVantage API. It's modelled on Apple's Stocks app, plus a TradingView-style **advanced view** one keypress away.
 
-**Live demo: LIVE_URL**
+**Live demo: [tickstock-gamma.vercel.app](https://tickstock-gamma.vercel.app)**
 
 ![Pressing V morphs the stock page into the TradingView-style advanced view](docs/media/advanced-view.gif)
 

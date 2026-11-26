@@ -1,4 +1,53 @@
 {
-  "data": [],
-  "fetchedAt": "2026-11-26T00:58:44.961Z"
+  "data": [
+    {
+      "title": "JPMorganChase reports cyberattack on third-party service providers - ABC News",
+      "url": "https://abcnews.com/US/jpmorgan-chase-reports-cyberattack-party-service-providers/story?id=138287705",
+      "source": "abcnews.com",
+      "summary": "JPMorganChase reports cyberattack on third-party service providers \"There is no disruption to our services,\" according to the statement. JPMorganChase said Thursday morning that \"third parties who provide services\" to the banking giant \"were the target of a cyberattack.\" \"Based on our investigation so far, we believe the attackers accessed certain marketing data held by those vendors, which may include some customer names and email addresses,\" the statement continued. [...] \"There is no disruption to our services,\" according to the statement. This is a developing story. Please check back for updates.",
+      "publishedAt": "Thu, 19 Nov 2026 14:43:49 GMT",
+      "favicon": "https://s.abcnews.com/assets/dtci/images/favicon.ico"
+    },
+    {
+      "title": "JPMorgan Chase Leads $3.5B Debt Refinancing for Zebra Technologies - News | ABL Advisor",
+      "url": "https://www.abladvisor.com/news/44107/jpmorgan-chase-leads-3-5b-debt-refinancing-for-zebra-technologies",
+      "source": "abladvisor.com",
+      "summary": "On Nov. 20, 2026, the Company closed on a $3.50 billion senior secured credit facility maturing Nov. 2031 with a pricing at Term SOFR + 1.00% when net debt leverage ratio is at or below 1.5x. The refinanced credit facility removed the credit spread adjustment which improves pricing by 10 basis points for, with respect to dollars, Term SOFR Rate loans. The refinanced credit facility also implemented 2.5 basis point favorable pricing with respect to commitment fees on revolving commitments when [...] Zebra Technologies Corporation, a global leader in digitizing and automating workflows to deliver intelligent operations, today announced actions to refinance its debt and expand liquidity. JPMorgan Chase Bank was the lead left arranger on the structuring and syndication of the refinanced credit facility, and Zebra Technologies engaged Sidley Austin LLP as counsel for the transaction.Debt Refinancing Highlights: [...] commitments when the Company’s net debt leverage ratio is below 2.5x. The refinanced credit facility has $250 million in increased capacity, consisting of a $1.75 billion revolving credit facility and $1.75 billion in term loans. The Company’s facility prior to refinancing was a $3.25 billion senior secured credit facility maturing May 2027 consisting of a $1.50 billion revolving credit facility and $1.75 billion of term loans.",
+      "publishedAt": "Wed, 25 Nov 2026 16:00:00 GMT",
+      "favicon": "https://www.abladvisor.com/favicon.ico"
+    },
+    {
+      "title": "JPMorgan Chase (JPM) Stock Still Looks Like A Bargain On Its 122% Run",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/jpmorgan-chase-jpm-stock-still-091521471.html",
+      "source": "finance.yahoo.com",
+      "summary": "Simply Wall St. JPMorgan Chase (JPM) Stock Still Looks Like A Bargain On Its 122% Run JPMorgan Chase has given long term shareholders a powerful ride over the past few years, and with recent swings around news on outages, cyber issues and leadership changes, the live question is whether the current price is properly supported by the returns the bank earns on its capital. [...] - Over 5 years, JPMorgan Chase has delivered a total return of about 122.3%, which puts real weight on whether that share price run lines up with the profitability of the capital it puts to work. - Recent headlines around a third party vendor data breach and a system outage highlight operational and technology investment needs that can influence how much capital JPMorgan Chase has to commit, and the returns it can generate on that capital over time. [...] The Excess Returns model looks at how consistently JPMorgan Chase earns more on its equity than the return shareholders require. In this framework, the bank is working off a book value of about $132.30 per share and a stable book value estimate of $149.09 per share, with analysts expecting stable EPS of $27.32 per share based on future return on equity forecasts.",
+      "publishedAt": "Tue, 24 Nov 2026 09:15:21 GMT",
+      "favicon": "https://s.yimg.com/cv/apiv2/finance/YF_Favicon_16.png"
+    },
+    {
+      "title": "JPMorgan, Visa, Mastercard say third-party vendors targeted in cyberattack",
+      "url": "https://www.reuters.com/legal/government/jpmorgan-says-third-party-vendors-targeted-cyberattack-2026-11-19",
+      "source": "reuters.com",
+      "summary": "JPMorgan Chase , the largest US lender, said on Thursday that third parties who provide services to the firm were the target of a cyberattack.",
+      "publishedAt": "Fri, 20 Nov 2026 02:00:00 GMT",
+      "favicon": "https://www.reuters.com/pf/resources/images/reuters/favicon/tr_fvcn_kinesis_32x32_v2.ico?d=395&mxId=00000000"
+    },
+    {
+      "title": "Visa, Mastercard and JPMorgan Customer Data Leaked by Hackers - WSJ",
+      "url": "https://www.wsj.com/finance/banking/visa-mastercard-and-jpmorgan-customer-data-leaked-by-hackers-3b5a0f87",
+      "source": "wsj.com",
+      "summary": "Data from thousands of customers of Visa V -2.04%decrease; down pointing triangle, Mastercard MA -1.42%decrease; down pointing triangle and JPMorgan JPM -0.80%decrease; down pointing triangle Chase was leaked Thursday by a ransomware group, the latest in a string of tech incidents that have unnerved consumers in the last week. [...] A Visa spokesman said no payments data, such as card numbers, were affected and Visa’s own systems weren’t involved or affected. It added that the incident involved a third-party service provider in the Asia-Pacific region. Copyright ©2026 Dow Jones & Company, Inc. All Rights Reserved. 87990cbe856818d5eddac44c7b1cdeb8",
+      "publishedAt": "Thu, 19 Nov 2026 15:52:00 GMT",
+      "favicon": "https://s.wsj.net/favicon.ico"
+    },
+    {
+      "title": "Hackers Leak Data on Thousands of JPMorgan Chase’s Richest Customers - Newsweek",
+      "url": "https://www.newsweek.com/hackers-leak-data-jpmorgan-thousands-richest-customers-12740448",
+      "source": "newsweek.com",
+      "summary": "The n0n group first emerged in September and has since claimed responsibility for attacks against numerous organizations, including travel giant Expedia. Separately, JPMorgan Chase experienced a service disruption earlier this week that affected customer transactions. The bank attributed the problems to a software bug. Newsweek has contacted Visa for comment by email. This is a breaking news story. More to follow. Contact Newsweek editors on this story: Matthew Robinson and Tony Phillips. [...] Email addresses can sometimes be used to track down customers' details such as home addresses and phone numbers, as well as open them up to phishing emails. Read More on News The bank said that third parties who provide services to JPMorgan Chase were the target of the cyber attack. \"Based on our investigation so far, we believe the attackers accessed certain marketing data held by those vendors, which may include some customer names and email addresses,\" a spokesman said. [...] Hackers have released sensitive data from thousands of JPMorgan Chase's richest customers in the latest cyberattack on a major U.S. firm this week. Ransomware gang n0n published around 16,000 customer email addresses, along with phone numbers and JPMorgan Chase account IDs. The data appears to relate to the bank's Reserve program—an invitation-only Visa credit card that usually requires customers to have at least $10 million in assets under management.",
+      "publishedAt": "Thu, 19 Nov 2026 14:41:01 GMT",
+      "favicon": "https://www.newsweek.com/favicon.svg"
+    }
+  ],
+  "fetchedAt": "2026-11-26T02:16:56.242Z"
 }

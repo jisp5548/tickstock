@@ -31,6 +31,15 @@ function toPlainText(markdown: string): string {
     .trim();
 }
 
+/**
+ * "<company> news" finds articles; legal suffixes ("& Co.", "Inc.") and a leading "The" drag in profile and
+ * quote pages instead (e.g. "JPMorgan Chase & Co." returned nothing usable, "JPMorgan Chase" returns Reuters).
+ */
+function newsQuery(companyName: string): string {
+  const name = companyName.replace(/^The\s+/i, "").replace(/,?\s+(Inc\.?|Corporation|Corp\.?|& Co\.?|Co\.?)$/i, "");
+  return `${name} news`;
+}
+
 export async function fetchNews(companyName: string): Promise<NewsArticle[]> {
   const apiKey = process.env.TAVILY_API_KEY;
   if (!apiKey) throw new UpstreamUnavailableError("TAVILY_API_KEY is not set");
@@ -40,8 +49,8 @@ export async function fetchNews(companyName: string): Promise<NewsArticle[]> {
     cache: "no-store",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
-      // Plain "<company> news" returns articles; adding the ticker or "stock" pulls quote pages instead.
-      query: `${companyName} news`,
+      // Adding the ticker or "stock" to the query pulls quote pages instead of articles.
+      query: newsQuery(companyName),
       topic: "news",
       days: 7,
       max_results: MAX_ARTICLES + 4,
