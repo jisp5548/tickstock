@@ -1,7 +1,8 @@
+import { ViewTransition } from "react";
 import type { CompanyOverview } from "@/lib/alphavantage";
 import { formatCompact, formatDate, formatPrice, NOT_AVAILABLE } from "@/lib/format";
 import { getNews } from "@/lib/market";
-import { CHART_RANGES, sliceRange, type PricePoint } from "@/lib/series";
+import { averageVolume, CHART_RANGES, sliceRange, type PricePoint } from "@/lib/series";
 import type { WatchlistEntry } from "@/lib/watchlist";
 import { Logo } from "../logo";
 import { staggerDelay } from "../stagger";
@@ -23,7 +24,9 @@ export function StockHeader({ symbol, entry, overview }: StockHeaderProps) {
     <header className="flex items-center gap-4">
       <Logo symbol={symbol} light={entry?.lightLogo} size="lg" morph />
       <div className="min-w-0">
-        <h1 className="font-display text-3xl font-medium tracking-tight md:text-4xl">{symbol}</h1>
+        <ViewTransition name="stock-symbol">
+          <h1 className="w-fit font-display text-3xl font-medium tracking-tight md:text-4xl">{symbol}</h1>
+        </ViewTransition>
         <p className="truncate text-sm text-muted">
           {overview?.name ?? entry?.name ?? symbol}
           {details && <span className="text-muted/70"> · {details}</span>}
@@ -45,7 +48,6 @@ interface KeyStatsProps {
 export function KeyStats({ daily, weekly, overview }: KeyStatsProps) {
   const latest = daily.at(-1);
   const lastYear = sliceRange(weekly, ONE_YEAR);
-  const averageVolume = daily.length ? daily.reduce((sum, point) => sum + point.volume, 0) / daily.length : undefined;
   const yearHigh = overview?.week52High ?? (lastYear.length ? Math.max(...lastYear.map((point) => point.high)) : undefined);
   const yearLow = overview?.week52Low ?? (lastYear.length ? Math.min(...lastYear.map((point) => point.low)) : undefined);
 
@@ -54,7 +56,7 @@ export function KeyStats({ daily, weekly, overview }: KeyStatsProps) {
     ["High", latest?.high, formatPrice],
     ["Low", latest?.low, formatPrice],
     ["Volume", latest?.volume, formatCompact],
-    ["Avg Volume", averageVolume, formatCompact],
+    ["Avg Volume", averageVolume(daily), formatCompact],
     ["Market Cap", overview?.marketCap, formatCompact],
     ["52W High", yearHigh, formatPrice],
     ["52W Low", yearLow, formatPrice],

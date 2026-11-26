@@ -41,6 +41,17 @@ export const CHART_RANGES: readonly ChartRange[] = [
 /** The period the homepage list and tiles summarize (sparkline, change pill and red/green all agree on it). */
 export const LIST_RANGE = CHART_RANGES[1];
 
+/** Ranges whose source series has enough points to draw. */
+export function availableRanges(series: Record<RangeSource, readonly unknown[]>): ChartRange[] {
+  return CHART_RANGES.filter((range) => series[range.source].length > 1);
+}
+
+/** Axis label granularity: days for daily ranges, months up to a year, years beyond. */
+export function axisDateStyle(range: ChartRange): "short" | "month" | "year" {
+  if (range.source === "daily") return "short";
+  return range.months === 60 || !range.months ? "year" : "month";
+}
+
 function rangeCutoff(range: ChartRange, latestDate: string): string | undefined {
   const cutoff = new Date(`${latestDate}T00:00:00Z`);
   if (range.days) cutoff.setUTCDate(cutoff.getUTCDate() - range.days);
@@ -71,6 +82,10 @@ export function rangeChange(points: readonly { close: number }[]): Change {
   return changeBetween(points[0]?.close ?? 0, points.at(-1)?.close ?? 0);
 }
 
+export function averageVolume(points: readonly PricePoint[]): number | undefined {
+  return points.length ? points.reduce((sum, point) => sum + point.volume, 0) / points.length : undefined;
+}
+
 /** Day-over-day change for each point (the first point has no previous day). */
 export function withDailyChange<T extends ClosePoint>(points: readonly T[]): (T & { change?: Change })[] {
   return points.map((point, index) => ({
@@ -88,6 +103,21 @@ export interface Plot {
 export function yScale(min: number, max: number, height: number, inset = 0): (value: number) => number {
   const span = max - min || 1;
   return (value) => inset + (1 - (value - min) / span) * (height - inset * 2);
+}
+
+/** Inverse of yScale: the value at a y coordinate. */
+export function valueAtY(min: number, max: number, height: number, inset = 0): (y: number) => number {
+  const span = max - min || 1;
+  return (y) => min + (1 - (y - inset) / (height - inset * 2)) * span;
+}
+
+/** Simple moving average of closes; undefined until `period` points are available. */
+export function movingAverage(points: readonly ClosePoint[], period: number): (number | undefined)[] {
+  let sum = 0;
+  return points.map((point, index) => {
+    sum += point.close - (index >= period ? points[index - period].close : 0);
+    return index >= period - 1 ? sum / period : undefined;
+  });
 }
 
 /** Spread values evenly across `width` and scale them into `height`. */

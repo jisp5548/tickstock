@@ -1,3 +1,8 @@
+"use client";
+
+import { useSyncExternalStore } from "react";
+import { subscribeNever } from "@/lib/browser-value";
+
 /** Keyboard shortcut hint. Hidden on touch-only devices, where there's no keyboard to press it on. */
 export function Kbd({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
@@ -6,5 +11,20 @@ export function Kbd({ children, className = "" }: { children: React.ReactNode; c
     >
       {children}
     </kbd>
+  );
+}
+
+/** ⌘K on Apple platforms, Ctrl K elsewhere (server render assumes ⌘). */
+export function ModKbd({ letter, className }: { letter: string; className?: string }) {
+  const modifier = useSyncExternalStore(
+    subscribeNever,
+    () => (/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl "),
+    () => "⌘",
+  );
+  return (
+    <Kbd className={className}>
+      {modifier}
+      {letter}
+    </Kbd>
   );
 }

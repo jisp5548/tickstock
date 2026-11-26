@@ -5,12 +5,15 @@ import { AnimatePresence, motion, MotionConfig } from "motion/react";
 import { useRouter } from "next/navigation";
 import { createContext, use, useEffect, useState, useTransition } from "react";
 import { searchMarkets } from "@/app/actions";
+import { isPlainShortcut } from "@/lib/keyboard";
 import { EASE_IN, EASE_OUT } from "@/lib/motion";
 import { markInAppNavigation } from "@/lib/navigation";
 import { useAreaFill, usePillMode } from "@/lib/preferences";
 import { useIsMobile } from "@/lib/use-is-mobile";
 import { WATCHLIST } from "@/lib/watchlist";
+import { useAdvancedView } from "./advanced/advanced-view-context";
 import { AnimatedPlaceholder } from "./animated-placeholder";
+import { SearchIcon } from "./icons";
 import { Kbd } from "./kbd";
 import { Sheet } from "./sheet";
 
@@ -21,17 +24,15 @@ export function useOpenPalette(): () => void {
   return use(PaletteContext);
 }
 
-function isTypingTarget(target: EventTarget | null): boolean {
-  return target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
-}
-
 /**
  * Owns the palette's open state and the app-wide shortcuts: ⌘K / Ctrl+K or "/" to search, "F" to toggle
- * chart fill. Also makes every motion animation honor the OS reduced-motion setting.
+ * chart fill, "V" to switch a stock between standard and advanced view (Esc leaves advanced).
+ * Also makes every motion animation honor the OS reduced-motion setting.
  */
 export function CommandPaletteProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [, toggleFill] = useAreaFill();
+  const advanced = useAdvancedView();
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -40,17 +41,22 @@ export function CommandPaletteProvider({ children }: { children: React.ReactNode
         setOpen((current) => !current);
         return;
       }
-      if (isTypingTarget(event.target) || event.metaKey || event.ctrlKey || event.altKey) return;
-      if (event.key === "/") {
+      if (!isPlainShortcut(event)) return;
+      const key = event.key.toLowerCase();
+      if (key === "/") {
         event.preventDefault();
         setOpen(true);
-      } else if (event.key.toLowerCase() === "f") {
+      } else if (key === "f") {
         toggleFill();
+      } else if (key === "v" && advanced.available) {
+        advanced.setActive(!advanced.active);
+      } else if (key === "escape" && advanced.active) {
+        advanced.setActive(false);
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [toggleFill]);
+  }, [toggleFill, advanced]);
 
   return (
     <MotionConfig reducedMotion="user">
@@ -86,6 +92,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   const [searching, startSearch] = useTransition();
   const [fillOn, toggleFill] = useAreaFill();
   const [pillMode, togglePillMode] = usePillMode();
+  const advanced = useAdvancedView();
   useEffect(() => {
     const opener = document.activeElement;
     return () => (opener instanceof HTMLElement ? opener.focus() : undefined);
@@ -121,7 +128,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
     >
       <div className="p-3">
         <div className="iridescent relative flex items-center gap-2 rounded-2xl border-2 border-transparent px-3">
-          <SearchIcon />
+          <SearchIcon className="size-4 text-muted" />
           <Command.Input
             autoFocus
             value={query}
@@ -166,6 +173,12 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         )}
 
         <Command.Group heading="Actions">
+          {advanced.available && (
+            <PaletteItem value="advanced standard view chart tradingview" onSelect={() => run(() => advanced.setActive(!advanced.active))}>
+              <span className="flex-1">Switch to {advanced.active ? "standard" : "advanced"} view</span>
+              <Kbd>V</Kbd>
+            </PaletteItem>
+          )}
           <PaletteItem value="toggle chart fill shading area" onSelect={() => run(toggleFill)}>
             <span className="flex-1">{fillOn ? "Hide" : "Show"} shading under charts</span>
             <Kbd>F</Kbd>
@@ -186,11 +199,11 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         role="dialog"
         aria-modal
         aria-label="Search"
-        backdropClassName="fixed inset-0 z-40 bg-black/60"
+        backdropClassName="fixed inset-0 z-60 bg-black/60"
         initial={{ y: "100%" }}
         animate={{ y: 0, transition: { duration: 0.32, ease: EASE_OUT } }}
         exit={{ y: "100%", transition: { duration: 0.2, ease: EASE_IN } }}
-        className="fixed inset-x-0 bottom-0 z-50 flex h-[85dvh] flex-col rounded-t-[28px] bg-panel pb-[env(safe-area-inset-bottom)] ring-1 ring-white/10"
+        className="fixed inset-x-0 bottom-0 z-70 flex h-[85dvh] flex-col rounded-t-[28px] bg-panel pb-[env(safe-area-inset-bottom)] ring-1 ring-white/10"
       >
         {content}
       </Sheet>
@@ -201,7 +214,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
     <>
       <motion.div
         aria-hidden
-        className="fixed inset-0 z-40 bg-black/50"
+        className="fixed inset-0 z-60 bg-black/50"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1, transition: { duration: 0.18 } }}
         exit={{ opacity: 0, transition: { duration: 0.12 } }}
@@ -214,7 +227,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1, transition: { duration: 0.18, ease: EASE_OUT } }}
         exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.12, ease: EASE_IN } }}
-        className="squircle fixed top-[12vh] left-1/2 z-50 flex max-h-[min(560px,76vh)] w-[min(560px,calc(100vw-32px))] -translate-x-1/2 origin-top flex-col overflow-hidden rounded-3xl bg-panel shadow-2xl ring-1 ring-white/10 [--radius:24px]"
+        className="squircle fixed top-[12vh] left-1/2 z-70 flex max-h-[min(560px,76vh)] w-[min(560px,calc(100vw-32px))] -translate-x-1/2 origin-top flex-col overflow-hidden rounded-3xl bg-panel shadow-2xl ring-1 ring-white/10 [--radius:24px]"
       >
         {content}
       </motion.div>
@@ -243,13 +256,4 @@ function RemoteFeedback({ search }: { search: RemoteSearch }) {
 
 function Spinner() {
   return <span className="size-4 animate-spin rounded-full border-2 border-white/20 border-t-azure" aria-hidden />;
-}
-
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 20 20" className="size-4 shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
-      <circle cx="9" cy="9" r="6" />
-      <path d="m14 14 4 4" strokeLinecap="round" />
-    </svg>
-  );
 }

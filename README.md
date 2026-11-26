@@ -6,6 +6,41 @@ A stock watchlist modelled on Apple's Stocks app, built with Next.js 16 (App Rou
 - **Stock page** (`/stock/[symbol]`): an interactive price chart (1W to ALL, with scrubbing and keyboard inspection), Apple-style statistics, news, the company profile, and the daily price history.
 - **Search**: ⌘K / Ctrl+K or `/` opens a command palette. It filters the watchlist instantly and searches every US listing when you press Enter.
 - **Shading**: the area under every line can be switched on or off with `F`, from the palette, or with the chart's toggle. The choice is remembered.
+- **Advanced view** (press `V` on any stock): a TradingView-style workspace. See below.
+
+### Keyboard shortcuts
+
+| Key | Action |
+| --- | --- |
+| `⌘K` / `Ctrl K`, `/` | Search and actions |
+| `F` | Toggle shading under charts |
+| `V` | Switch a stock between standard and advanced view |
+| `Esc` | Close the menu or palette, then leave advanced view |
+| `C` / `M` | Crosshair / measure tool (advanced view) |
+| `+` / `-` / `0` | Zoom in / out / fit (advanced view; scroll and drag also zoom and pan) |
+| `←` / `→` | Move the crosshair when a chart is focused |
+
+## Advanced view
+
+The standard stock page is Apple-like. The advanced view gives the app its own identity: a TradingView-style workspace made of panels floating on black.
+
+| Area | Contents |
+| --- | --- |
+| Toolbar | Symbol search, candles / line, an Indicators menu (Volume, MA 20, MA 50), shading |
+| Left rail | Crosshair and measure tools, plus zoom and fit |
+| Chart | Candlesticks with volume and moving averages, an OHLC legend that follows the crosshair, axis tags, scroll-to-zoom and drag-to-pan |
+| Bottom bar | Ranges |
+| Right panel | Watchlist table, plus a symbol card with price, volume vs. average and the 52-week range |
+
+**How the switch stays seamless:**
+- **One morph for everything.** Toggling runs in a React transition, so named `<ViewTransition>` elements morph from their standard positions into the workspace in a single motion. The sidebar becomes the watchlist; the search box becomes the toolbar's symbol chip; the line chart becomes the candle chart; the price, logo, symbol and range tabs move into place.
+- **Choreography** (`app/globals.css`):
+  - Entering takes 520ms and leaving takes 380ms, both eased in and out.
+  - Old snapshots clear out before new ones fade in, so large crossfades never stack two images.
+  - The watchlist travels on an arc. The chart dips slightly before growing and settles at the end (under 1%, not a bounce).
+  - Workspace-only panels arrive from their own edges, staggered.
+- **Nothing reloads.** The standard page stays mounted while hidden (`<Activity>`), and the selected range is shared, so switching back and forth keeps your place. Picking another stock in the watchlist stays in advanced view.
+- **Fast drawing.** Each candle color, wick color and volume color is drawn as a single SVG path, so even ~1,350 weekly bars re-render cheaply while zooming and panning.
 
 ## Running it
 
@@ -54,7 +89,8 @@ In the list, the sparkline, the change pill and the red/green color all describe
 ```
 app/                 routes (layout with sidebar, homepage tiles, /stock/[symbol]) and the search server action
 components/          UI: sidebar, quote rows and tiles, command palette, sheet, logo, sparkline
-components/stock/    stock page: chart, statistics, profile, news, history, sheet wrapper
+components/stock/    stock page: chart, range tabs, statistics, profile, news, history, sheet, standard/advanced switch
+components/advanced/ advanced view: context, workspace, candle chart, watchlist + details panel
 lib/                 AlphaVantage and Tavily clients, cache, data sources, series math, formatting, preferences
 data/cache/          committed snapshot / persistent cache
 scripts/snapshot.mts refreshes the snapshot within the daily quota

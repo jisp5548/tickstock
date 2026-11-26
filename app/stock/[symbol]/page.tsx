@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { AdvancedWorkspace } from "@/components/advanced/workspace";
 import { PriceChart } from "@/components/stock/price-chart";
 import { PriceHistory } from "@/components/stock/price-history";
 import { CompanyProfile, KeyStats, News, NewsSkeleton, SectionHeading, StockHeader } from "@/components/stock/sections";
-import { getOverview, getSeries } from "@/lib/market";
+import { StockView } from "@/components/stock/stock-view";
+import { getOverview, getQuoteSummary, getSeries } from "@/lib/market";
 import { withDailyChange, type PricePoint } from "@/lib/series";
 import { findWatchlistEntry, WATCHLIST } from "@/lib/watchlist";
 
@@ -27,10 +29,11 @@ export default async function StockPage({ params }: PageProps<"/stock/[symbol]">
   const symbol = decodeURIComponent((await params).symbol).toUpperCase();
   if (!SYMBOL_PATTERN.test(symbol)) notFound();
 
-  const [daily, weekly, overviewResult] = await Promise.all([
+  const [daily, weekly, overviewResult, watchlistQuotes] = await Promise.all([
     getSeries(symbol, "daily"),
     getSeries(symbol, "weekly"),
     getOverview(symbol),
+    Promise.all(WATCHLIST.map(getQuoteSummary)),
   ]);
   if (daily.status === "not-found") notFound();
 
@@ -40,7 +43,13 @@ export default async function StockPage({ params }: PageProps<"/stock/[symbol]">
   const overview = overviewResult.status === "ok" ? overviewResult.data : undefined;
   const entry = findWatchlistEntry(symbol);
 
-  return (
+  // The advanced view's watchlist only needs the last price and today's move.
+  const quotes = WATCHLIST.map((watched, index) => {
+    const quote = watchlistQuotes[index];
+    return quote.status === "ok" ? { ...watched, price: quote.data.price, dayChange: quote.data.dayChange } : watched;
+  });
+
+  const standard = (
     <>
       <StockHeader symbol={symbol} entry={entry} overview={overview} />
       <PriceChart daily={toClosePoints(dailyPoints)} weekly={toClosePoints(weeklyPoints)} />
@@ -58,5 +67,14 @@ export default async function StockPage({ params }: PageProps<"/stock/[symbol]">
         />
       </section>
     </>
+  );
+
+  return (
+    <StockView
+      standard={standard}
+      advanced={
+        <AdvancedWorkspace symbol={symbol} entry={entry} overview={overview} daily={dailyPoints} weekly={weeklyPoints} quotes={quotes} />
+      }
+    />
   );
 }

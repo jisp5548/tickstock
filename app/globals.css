@@ -192,3 +192,148 @@ html[data-fill="off"] .area-fill {
 ::view-transition-new(root) {
   animation-duration: 220ms;
 }
+
+/*
+ * Standard ↔ advanced view choreography (transition types set in advanced-view-context.tsx).
+ * Entering is the expressive moment (520ms); leaving is shorter (380ms). Moves ease in-out throughout.
+ */
+:root:active-view-transition-type(advanced-enter, advanced-exit) {
+  &::view-transition-group(*) {
+    animation-timing-function: var(--ease-in-out);
+  }
+
+  /* Old snapshots clear out early and new ones arrive a beat later, so large crossfades never stack two full images. */
+  &::view-transition-old(*) {
+    animation: vt-fade-out 180ms var(--ease-in) both;
+  }
+  &::view-transition-new(*) {
+    animation: vt-fade-in 300ms var(--ease-out) 90ms both;
+  }
+  &::view-transition-old(root) {
+    animation: vt-fade-out 220ms var(--ease-in) both;
+  }
+  &::view-transition-new(root) {
+    animation: vt-fade-in 260ms var(--ease-out) both;
+  }
+
+  /* The watchlist crosses the whole screen, so it travels on a slight arc instead of a straight line. */
+  &::view-transition-image-pair(watchlist) {
+    animation: vt-arc var(--vt-duration) var(--ease-in-out) both;
+  }
+  /* The chart winds up (dips) before growing and settles at the end: a subtle anticipation / follow-through, no bounce. */
+  &::view-transition-image-pair(stock-chart) {
+    animation: vt-anticipate var(--vt-duration) var(--ease-in-out) both;
+  }
+
+  /* Workspace-only panels arrive from the edge they live on, staggered; they leave faster than they came. */
+  &::view-transition-new(adv-toolbar):only-child {
+    animation: vt-drop-in 360ms var(--ease-out) 120ms both;
+  }
+  &::view-transition-new(adv-rail):only-child {
+    animation: vt-slide-in 360ms var(--ease-out) 170ms both;
+  }
+  &::view-transition-new(adv-footer):only-child {
+    animation: vt-rise-in 360ms var(--ease-out) 220ms both;
+  }
+  &::view-transition-old(adv-toolbar):only-child {
+    animation: vt-drop-out 160ms var(--ease-in) both;
+  }
+  &::view-transition-old(adv-rail):only-child {
+    animation: vt-slide-out 160ms var(--ease-in) both;
+  }
+  &::view-transition-old(adv-footer):only-child {
+    animation: vt-rise-out 160ms var(--ease-in) both;
+  }
+}
+
+:root:active-view-transition-type(advanced-enter) {
+  --vt-duration: 520ms;
+  &::view-transition-group(*) {
+    animation-duration: 520ms;
+  }
+}
+
+:root:active-view-transition-type(advanced-exit) {
+  --vt-duration: 380ms;
+  &::view-transition-group(*) {
+    animation-duration: 380ms;
+  }
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-arc {
+  50% {
+    translate: 0 -28px;
+  }
+}
+
+@keyframes vt-anticipate {
+  12% {
+    scale: 0.97;
+  }
+  85% {
+    scale: 1.006;
+  }
+}
+
+@keyframes vt-drop-in {
+  from {
+    opacity: 0;
+    translate: 0 -14px;
+  }
+}
+
+@keyframes vt-drop-out {
+  to {
+    opacity: 0;
+    translate: 0 -10px;
+  }
+}
+
+@keyframes vt-slide-in {
+  from {
+    opacity: 0;
+    translate: -14px 0;
+  }
+}
+
+@keyframes vt-slide-out {
+  to {
+    opacity: 0;
+    translate: -10px 0;
+  }
+}
+
+@keyframes vt-rise-in {
+  from {
+    opacity: 0;
+    translate: 0 14px;
+  }
+}
+
+@keyframes vt-rise-out {
+  to {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
