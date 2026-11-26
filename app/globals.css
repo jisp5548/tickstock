@@ -1,26 +1,194 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Design tokens: a near-black stage, graphite panels, fine charcoal rules, white type and a single blue
+ * for interactive state. Gains and losses use Apple's green/red.
+ */
+@theme {
+  --color-stage: #151515;
+  --color-panel: #1f1f1f;
+  --color-raised: #252525;
+  --color-rule: #363636;
+  --color-ink: #f7f6f4;
+  --color-muted: #9a9a9a;
+  --color-blue: #0666ff;
+  --color-azure: #3389ff;
+  --color-apricot: #f2caaa;
+  --color-up: #30d158;
+  --color-down: #ff453a;
+  --color-up-pill: #248a3d;
+  --color-down-pill: #d70015;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-inter), ui-sans-serif, sans-serif;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+
+  --animate-shimmer: shimmer 1.6s var(--ease-in-out) infinite;
+  --animate-row-in: row-in 320ms var(--ease-out) both;
+  --animate-reveal: reveal 520ms var(--ease-out) both;
+  --animate-draw: draw 1.8s var(--ease-in-out) infinite;
+  --animate-sheen: sheen 6s linear infinite;
+  --animate-placeholder: placeholder-in 360ms var(--ease-out) both;
+  --animate-sheet-in: sheet-in 340ms var(--ease-out) both;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes placeholder-in {
+  from {
+    opacity: 0;
+    transform: translateY(45%);
+    filter: blur(2px);
   }
 }
 
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: -1;
+  }
+}
+
+@property --sheen-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes sheen {
+  to {
+    --sheen-angle: 360deg;
+  }
+}
+
+html {
+  color-scheme: dark;
+  background: var(--color-stage);
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-stage);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Continuous (squircle) corners where supported; squircles read smaller, so the radius grows to match. */
+@utility squircle {
+  @supports (corner-shape: squircle) {
+    corner-shape: squircle;
+    border-radius: calc(var(--radius, 16px) * 1.6);
+  }
+}
+
+@utility skeleton {
+  background: linear-gradient(90deg, var(--color-raised) 25%, #303030 50%, var(--color-raised) 75%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+/* Slow-turning iridescent sheen in brand blues and apricot (deliberately no purple). */
+@utility iridescent {
+  background:
+    linear-gradient(var(--color-raised), var(--color-raised)) padding-box,
+    conic-gradient(
+        from var(--sheen-angle),
+        var(--color-blue),
+        #2fd6c3,
+        var(--color-apricot),
+        var(--color-azure),
+        var(--color-blue)
+      )
+      border-box;
+  animation: var(--animate-sheen);
+}
+
+/* Area fills under every line obey one global toggle (set on <html> before first paint). */
+.area-fill {
+  transition: opacity 240ms var(--ease-out);
+}
+
+html[data-fill="off"] .area-fill {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* Grows a small control's tap target by 8px on every side without changing its visible size. */
+@utility hit-slop {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+  }
+}
+
+/* Route view transitions (React <ViewTransition>): the shared logo morphs with an ease-in-out move. */
+::view-transition-group(*) {
+  animation-duration: 320ms;
+  animation-timing-function: var(--ease-in-out);
+}
+
+::view-transition-old(root) {
+  animation-duration: 160ms;
+}
+
+::view-transition-new(root) {
+  animation-duration: 220ms;
 }
